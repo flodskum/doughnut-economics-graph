@@ -98,33 +98,72 @@ SOFTWARE.
     const testGInner = ["income & work", "peace & justice", "political voice", "social equity", "gender equality", "housing", "networks", "energy", "water", "food", "health", "education"];
     const testGOuter = ["nitrogen & phosphorus loading", "freshwater withdrawals", "land conversion", "biodiversity loss", "air pollution", "ozone layer depletion", "climate change", "ocean acidification", "chemical pollution"];
 
+    function _randInt() {
+        return Math.round(Math.random() * 100)
+    }
+    function _randValue() {
+        let type = _randInt();
+        if (type <= 70) {
+            return _randInt();
+        } else if (type <= 80) {
+            return -(_randInt());
+        } else if (type <= 90) {
+            return 150;
+        } else {
+            return "NaN";
+        }
+    }
+
     function testIt(number) {
-        clearDoughnut();
+        myDonut.clearDoughnut();
         switch (number) {
             case 1:
-                grd = grdPersonal;
                 for (dim = 0; dim < testPInner.length; dim++) {
-                    addInner(testPInner[dim], _randInt(), "");
+                    myDonut.addInner(testPInner[dim], _randInt(), "");
                 }
                 for (dim = 0; dim < testPOuter.length; dim++) {
-                    addOuter(testPOuter[dim], _randInt(), "");
+                    myDonut.addOuter(testPOuter[dim], _randInt(), "");
                 }
+                myDonut.setColours(1);
                 break;
             case 2:
-                grd = grdGlobal;
                 for (dim = 0; dim < testGInner.length; dim++) {
-                    addInner(testGInner[dim], _randValue(), "one");
-                    addInner(testGInner[dim], _randValue(), "two");
+                    myDonut.addInner(testGInner[dim], _randValue(), "one");
+                    myDonut.addInner(testGInner[dim], _randValue(), "two");
                 }
                 for (dim = 0; dim < testGOuter.length; dim++) {
-                    addOuter(testGOuter[dim], _randValue(), "");
+                    myDonut.addOuter(testGOuter[dim], _randValue());
                 }
+                myDonut.setColours(2);
                 break;
         }
     }
 
-    // Call first draw
-    update();
+    function setColours(number) {
+        myDonut.setColours(number);
+    }
+    function clearDoughnut() {
+        myDonut.clearDoughnut();
+    }
+
+    function addOuter(name, level, label) {
+        myDonut.addOuter(name, level, label);
+    }
+    function addInner(name, level, label) {
+        myDonut.addInner(name, level, label);
+    }
+    function delOuter() {
+        myDonut.delOuter();
+    }
+    function delInner() {
+        myDonut.delInner();
+    }
+
+    function importDoughnut(csv) {
+        myDonut.importDoughnut(csv);
+    }
+
+    myDonut = new Doughnut(640, "doughnutCanvas", "doughnutDiv", "innerDims", "outerDims", "csv")
 </script>
 
 </html>
