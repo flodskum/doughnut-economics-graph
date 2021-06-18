@@ -1,4 +1,26 @@
+/*
+MIT License
 
+Copyright (c) 2021 Jeremy Johnson
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 
 class _DoughnutDimensions {
     constructor(type, maxVal) {
@@ -100,13 +122,15 @@ class Doughnut {
     // size: Size of doughnut
     // canvasId: Id of canvas element to draw the doughnut into
     // divId: Id of div element that canvas is in (to allow resize correctly)
+    // infoId: Optional id of doughnut dimension info
     // innerId: Optional id of paragraph to show inner dimensions list
     // outerId: Optional id of paragraph to show outer dimensions list
     // exportId: Optional id of textarea to show export CSV string
-    constructor(size, canvasId, divId, innerId, outerId, exportId) {
+    constructor(size, canvasId, divId, infoId, innerId, outerId, exportId) {
         this._donutSize = size;
         this._canvasId = canvasId;
         this._divId = divId;
+        this._infoId = infoId;
         this._innerId = innerId;
         this._outerId = outerId;
         this._exportId = exportId;
@@ -133,15 +157,15 @@ class Doughnut {
         this._donutFrosting = "rgb(71,112,32)";
         this._donutFilling = "rgb(140,215,85)";
 
-        var c = document.getElementById(canvasId);
-        this._ctx = c.getContext("2d");
+        let canvas = document.getElementById(canvasId);
+        this._ctx = canvas.getContext("2d");
         // Set size of canvas & div to the required doughnut size
-        c.style.width = this._donutSize;
-        c.style.height = this._donutSize;
-        c.width = this._donutSize;
-        c.height = this._donutSize;
-        var d = document.getElementById(divId);
-        d.style.maxWidth = this._donutSize;
+        canvas.style.width = this._donutSize;
+        canvas.style.height = this._donutSize;
+        canvas.width = this._donutSize;
+        canvas.height = this._donutSize;
+        let div = document.getElementById(divId);
+        div.style.maxWidth = this._donutSize;
     
         this._grdGlobal = this._ctx.createRadialGradient(this._middleX, this._middleY, this._outOuter, this._middleX, this._middleY, this._extraDonut);
         this._grdGlobal.addColorStop(0, "rgb(211,63,54)");
@@ -154,9 +178,63 @@ class Doughnut {
         this._grd = this._grdPersonal;
         this._innerDims = new _DoughnutDimensions("inner", 100);
         this._outerDims = new _DoughnutDimensions("outer", this._maxDonutRadius);
+        this._innerPaths = null;
+        this._outerPaths = null;
+
+        canvas.addEventListener("mousemove", (e) => {
+            let caption = this._checkMouseOver(e.offsetX, e.offsetY);
+            if (caption) {
+                if (this._infoId) {
+                    document.getElementById(this._infoId).innerHTML = "Dimension Info: " + caption;
+                }
+                canvas.style.cursor = "crosshair";
+            } else {
+                if (this._infoId) {
+                    document.getElementById(this._infoId).innerHTML = "Dimension Info: None";
+                }
+                canvas.style.cursor = "default";
+            }
+         });
 
         // Call first draw
         this.update();
+    }
+
+    _checkMousePathsDims(dims, paths, x, y) {
+        let caption = "";
+        let found = false;
+        //this._debug(x + "," + y);
+        let dim = 0, lvl = 0;
+        for (dim = 0; dim < dims.length(); dim++) {
+            let subpaths = paths[dim];
+            for (lvl = 0; lvl < subpaths.length; lvl++) {
+                if (this._ctx.isPointInPath(subpaths[lvl], x, y)) {
+                    //this._debug("found");
+                    found = true;
+                    break;
+                }
+            }
+            if (found) { break; }
+        }
+        if (found) {
+            let info = dims.get(dim);
+            caption = info.name;
+            if (info.levels[lvl].label) { caption += "/" + info.levels[lvl].label }
+            caption += " = " + info.levels[lvl].value;
+            //this._debug("Mouse over: " + caption );
+        }
+        return caption;
+    }
+
+    _checkMouseOver(x, y) {
+        let caption = "";
+        if (this._innerPaths != null) {
+            caption = this._checkMousePathsDims(this._innerDims, this._innerPaths, x, y);
+        }
+        if (!caption && this._outerPaths != null) {
+            caption = this._checkMousePathsDims(this._outerDims, this._outerPaths, x, y);
+        }
+        return caption;
     }
 
     addOuter(name, level, label) {
@@ -292,18 +370,22 @@ class Doughnut {
     // radiiColour: Coulurs - either array of arrays of colours for each sub-arc in an arc, or an array of cols
     // start: starting arc degress (0 to 2pi)
     // totalDegrees: degrees to fill with the supplied arcs
-    _drawArcsRange(radiiOut, radiiIn, radiiColour, start, totalDegrees) {
+    _drawArcsRange(radiiOut, radiiIn, radiiColour, start, totalDegrees, max, min) {
         let numArcs = radiiOut.length;
         let arcStart = start;
         let arcDegrees = totalDegrees / numArcs;
+        let paths = [];
 
         for (let arc = 0; arc < numArcs; arc++) {
             let arcEnd = arcStart + arcDegrees;
             if (Array.isArray(radiiOut[arc])) {
                 // Sub arcs!
-                this._drawArcsRange(radiiOut[arc], radiiIn[arc], radiiColour[arc], arcStart, arcDegrees);
+                let subpaths = this._drawArcsRange(radiiOut[arc], radiiIn[arc], radiiColour[arc], arcStart, arcDegrees, max, min);
+                paths[arc] = subpaths;
             } else {
-                //this._debug("arc:" + arc + "," + radiiOut[arc].toString() + "," + radiiIn[arc].toString() + "," + radiiColour[arc]);
+                // Draw the arc
+                //this._debug("arc-deg:" + arc + "," + arcStart + "," + arcEnd);
+                //this._debug("arc-rad:" + arc + "," + radiiOut[arc].toString() + "," + radiiIn[arc].toString() + "," + radiiColour[arc]);
                 this._ctx.fillStyle = radiiColour[arc];
                 this._ctx.beginPath();
                 this._ctx.arc(this._middleX, this._middleY, radiiOut[arc], arcStart, arcEnd);
@@ -311,29 +393,49 @@ class Doughnut {
                 this._ctx.closePath();
                 this._ctx.stroke();
                 this._ctx.fill();
+                // Create a path to find this arc
+                //this._debug("arc-path:" + arc + "," + max + "," + min);
+                let p = new Path2D;
+                p.lineWidth = 10;
+                p.arc(this._middleX, this._middleY, max, arcStart, arcEnd);
+                p.arc(this._middleX, this._middleY, min, arcEnd, arcStart, true);
+                p.closePath();
+                paths[arc] = p;
             }
             arcStart = arcEnd;
         }
+        return paths;
     }
 
-    _drawArcs(radiiOut, radiiIn, radiiColour, strokeColour) {
+    _drawArcs(radiiOut, radiiIn, radiiColour, strokeColour, max, min) {
         this._ctx.lineWidth = this._arcLineWidth;
         this._ctx.strokeStyle = strokeColour;
-        this._drawArcsRange(radiiOut, radiiIn, radiiColour, 0, (2 * Math.PI));
+        let paths = this._drawArcsRange(radiiOut, radiiIn, radiiColour, 0, (2 * Math.PI), max, min);
         this._ctx.lineWidth = 1;
+        return paths;
     }
 
     _drawDimensions(dims, extMax, extMin) {
         const INNER = 0;
         const OUTER = 1;
+        let paths = null;
         if (dims.length() > 0) {
             let inRadii = [];
             let outRadii = [];
             let colRadii = [];
             let extScale = (extMax - extMin) / 100;
             let intScale = ((this._outDonut - this._inDonut) / 2) / 100;
-            let type = INNER;
-            if (extMax > this._outDonut) { type = OUTER };
+            let type = null;
+            let min = 0, max =0;
+            if (extMax > this._outDonut) { 
+                type = OUTER;
+                min = this._midDonut;
+                max = extMax;
+            } else {
+                type = INNER;
+                min = extMin;
+                max = this._midDonut;
+            }
             for (let dim = 0; dim < dims.length(); dim++) {
                 let levels = dims.get(dim).levels;
                 let inArcs = [];
@@ -381,8 +483,9 @@ class Doughnut {
             //this._debug(inRadii.toString());
             //this._debug(outRadii.toString());
             //this._debug(colRadii.toString());
-            this._drawArcs(outRadii, inRadii, colRadii, "white");
+            paths = this._drawArcs(outRadii, inRadii, colRadii, "white", max, min);
         }
+        return paths;
     }
 
     _drawLabels() {
@@ -394,11 +497,11 @@ class Doughnut {
     }
 
     _drawInnerDimensions() {
-        this._drawDimensions(this._innerDims, this._outInner, this._inInner);
+        this._innerPaths = this._drawDimensions(this._innerDims, this._outInner, this._inInner);
     }
 
     _drawOuterDimensions() {
-        this._drawDimensions(this._outerDims, this._outOuter, this._inOuter);
+        this._outerPaths = this._drawDimensions(this._outerDims, this._outOuter, this._inOuter);
     }
 
     _drawLimits() {
