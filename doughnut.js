@@ -121,6 +121,7 @@ class Doughnut {
         this._outInner = this._inInner + this._section; // this._section * 2
         this._inDonut = this._outInner;
         this._outDonut = this._inDonut + this._section; // this._section * 3
+        this._midDonut = this._inDonut + (this._outDonut - this._inDonut) / 2;
         this._inOuter = this._outDonut;
         this._outOuter = this._inOuter + this._section; // this._section * 4
         this._extraDonut = this._outOuter + 25;   // For the complete overshoot
@@ -186,7 +187,7 @@ class Doughnut {
     // Example:  Inner, income, 76, "male income"
     //           Inner, income, 81, "female income"
     //           Outer, "climate change", 150, ""
-    importDoughnut(text) {
+    import(text) {
         const failure = "Format errors\nExpects rows with 4 cols: type, name, value, sub-label\n   outer, climate change, 76,\n   inner, food, 20, imports\n   inner, food, 56, exports";
         let errors = this._innerDims.import(text);
         errors += this._outerDims.import(text);
@@ -285,32 +286,28 @@ class Doughnut {
         }
     }
 
-    // Draw the supplied arcs
-    // radii: Array of radius lengths for each arch
-    // radiiColour: Either array of colours (one per arc), or a single colour, or null
+    // Draw the supplied arcs - the structure of the next 3 args MUST match
+    // radiiOut: Outer radius lengths - either array of arrays for each sub-arc in an arc, or an array of arcs
+    // radiiIn: Inner radius lengths - either array of arrays for each sub-arc in an arc, or an array of arcs
+    // radiiColour: Coulurs - either array of arrays of colours for each sub-arc in an arc, or an array of cols
     // start: starting arc degress (0 to 2pi)
     // totalDegrees: degrees to fill with the supplied arcs
-    _drawArcsRange(radii, radiiColour, start, totalDegrees) {
-        let numArcs = radii.length;
+    _drawArcsRange(radiiOut, radiiIn, radiiColour, start, totalDegrees) {
+        let numArcs = radiiOut.length;
         let arcStart = start;
         let arcDegrees = totalDegrees / numArcs;
 
         for (let arc = 0; arc < numArcs; arc++) {
             let arcEnd = arcStart + arcDegrees;
-            if (radiiColour != null) {
-                if (Array.isArray(radiiColour)) {
-                    this._ctx.fillStyle = radiiColour[arc];
-                } else {
-                    this._ctx.fillStyle = radiiColour;
-                }
-            }
-            if (Array.isArray(radii[arc])) {
+            if (Array.isArray(radiiOut[arc])) {
                 // Sub arcs!
-                this._drawArcsRange(radii[arc], null, arcStart, arcDegrees);
+                this._drawArcsRange(radiiOut[arc], radiiIn[arc], radiiColour[arc], arcStart, arcDegrees);
             } else {
+                //this._debug("arc:" + arc + "," + radiiOut[arc].toString() + "," + radiiIn[arc].toString() + "," + radiiColour[arc]);
+                this._ctx.fillStyle = radiiColour[arc];
                 this._ctx.beginPath();
-                this._ctx.lineTo(this._middleX, this._middleY);
-                this._ctx.arc(this._middleX, this._middleY, radii[arc], arcStart, arcEnd);
+                this._ctx.arc(this._middleX, this._middleY, radiiOut[arc], arcStart, arcEnd);
+                this._ctx.arc(this._middleX, this._middleY, radiiIn[arc], arcEnd, arcStart, true);
                 this._ctx.closePath();
                 this._ctx.stroke();
                 this._ctx.fill();
@@ -319,11 +316,73 @@ class Doughnut {
         }
     }
 
-    _drawArcs(radii, radiiColour, strokeColour) {
+    _drawArcs(radiiOut, radiiIn, radiiColour, strokeColour) {
         this._ctx.lineWidth = this._arcLineWidth;
         this._ctx.strokeStyle = strokeColour;
-        this._drawArcsRange(radii, radiiColour, 0, (2 * Math.PI));
+        this._drawArcsRange(radiiOut, radiiIn, radiiColour, 0, (2 * Math.PI));
         this._ctx.lineWidth = 1;
+    }
+
+    _drawDimensions(dims, extMax, extMin) {
+        const INNER = 0;
+        const OUTER = 1;
+        if (dims.length() > 0) {
+            let inRadii = [];
+            let outRadii = [];
+            let colRadii = [];
+            let extScale = (extMax - extMin) / 100;
+            let intScale = ((this._outDonut - this._inDonut) / 2) / 100;
+            let type = INNER;
+            if (extMax > this._outDonut) { type = OUTER };
+            for (let dim = 0; dim < dims.length(); dim++) {
+                let levels = dims.get(dim).levels;
+                let inArcs = [];
+                let outArcs = [];
+                let cols = [];
+                for (let lvl = 0; lvl < levels.length; lvl++) {
+                    let val = levels[lvl].value;
+                    let outer = 0;
+                    let inner = 0;
+                    let col = this._grd;
+                    if (this._isNotNumber(val)) {
+                        val = 100;
+                        col = "lightgray";
+                    }
+                    if (type == INNER) {
+                        if (val < 0) { 
+                            // Negative value
+                            inner = extMax;
+                            // Double negative is positive!
+                            outer = extMax - (val * intScale);
+                            col = "white"
+                        } else {
+                            inner = extMin + ((100 - val) * extScale);
+                            outer = extMax;
+                        }
+                    } else {
+                        if (val < 0) { 
+                            // Negative value
+                            inner = extMin + (val * intScale);
+                            outer = extMin;
+                            col = "white"
+                        } else {
+                            inner = extMin;
+                            outer = extMin + (val * extScale);
+                        }
+                    }
+                    inArcs.push(inner);
+                    outArcs.push(outer);
+                    cols.push(col);
+                }
+                inRadii[dim] = inArcs;
+                outRadii[dim] = outArcs;
+                colRadii[dim] = cols;
+            }
+            //this._debug(inRadii.toString());
+            //this._debug(outRadii.toString());
+            //this._debug(colRadii.toString());
+            this._drawArcs(outRadii, inRadii, colRadii, "white");
+        }
     }
 
     _drawLabels() {
@@ -335,83 +394,11 @@ class Doughnut {
     }
 
     _drawInnerDimensions() {
-        if (this._innerDims.length() > 0) {
-            let dimRadii = [];
-            let holeRadii = [];
-            let scale = (this._outInner - this._inInner) / 100;
-            for (let dim = 0; dim < this._innerDims.length(); dim++) {
-                // Colour arc all thy to the doughnut
-                dimRadii[dim] = this._outInner;
-                // Blank out arc up to the opposite of the level
-                let levels = this._innerDims.get(dim).levels;
-                let arcs = [];
-                for (let lvl = 0; lvl < levels.length; lvl++) {
-                    let val = levels[lvl].value;
-                    if (this._isNotNumber(val)) {
-                        // TODO add proper support for NaNs
-                        val = 0;
-                    }
-                    // Doughnut this._section only has half available for inner dimensions
-                    if (val < 0) { val /= 2; }
-                    arcs.push(this._inInner + ((100 - val) * scale));
-                }
-                holeRadii[dim] = arcs;
-            }
-            this._drawArcs(dimRadii, this._grd, "white");
-            // Draw the levels bking the hole!
-            this._drawArcs(holeRadii, "white", "white");
-        } else {
-            // No inner levels - so just make a hole
-            let holeRadii = [this._outInner];
-            this._drawArcs(holeRadii, "white", "white");
-        }
+        this._drawDimensions(this._innerDims, this._outInner, this._inInner);
     }
 
     _drawOuterDimensions() {
-        if (this._outerDims.length() > 0) {
-            let dimRadii = [];
-            let colRadii = [];
-            let scale = (this._outOuter - this._inOuter) / 100;
-            let debug = "";
-            for (let dim = 0; dim < this._outerDims.length(); dim++) {
-                let levels = this._outerDims.get(dim).levels;
-                // TODO support more than a single level!
-                let arc = levels[0].value;
-                let col = this._grd;
-                if (this._isNotNumber(arc)) {
-                    arc = 100;
-                    col = "lightgray";
-                }
-                // Colour arc up to level
-                dimRadii[dim] = this._inOuter + (arc * scale);
-                colRadii[dim] = col;
-            }
-            this._drawArcs(dimRadii, colRadii, "white");
-
-            this._drawDoughnut();
-
-            // Overwrite doughnut to show negatives
-            let arcStart = 0;
-            let arcDegrees = (2 * Math.PI) / this._outerDims.length();
-            scale = ((this._outDonut - this._inDonut) / 2) / 100;
-            this._ctx.strokeStyle = "white";
-            for (let dim = 0; dim < this._outerDims.length(); dim++) {
-                let arcEnd = arcStart + arcDegrees;
-                let levels = this._outerDims.get(dim).levels;
-                // TODO: support more than single level
-                let val = levels[0].value;
-                if (val < 0) {
-                    val = -val * scale;
-                    this._ctx.lineWidth = val;
-                    this._ctx.beginPath();
-                    this._ctx.arc(this._middleX, this._middleY, this._outDonut - (val / 2), arcStart, arcEnd);
-                    this._ctx.stroke();
-                }
-                arcStart = arcEnd;
-            }
-        } else {
-            this._drawDoughnut();
-        }
+        this._drawDimensions(this._outerDims, this._outOuter, this._inOuter);
     }
 
     _drawLimits() {
@@ -422,7 +409,7 @@ class Doughnut {
         this._ctx.arc(this._middleX, this._middleY, this._outOuter, 0, 2 * Math.PI);
         this._ctx.stroke();
         this._ctx.beginPath();
-        this._ctx.arc(this._middleX, this._middleY, this._inDonut + (this._outDonut - this._inDonut) / 2, 0, 2 * Math.PI);
+        this._ctx.arc(this._middleX, this._middleY, this._midDonut, 0, 2 * Math.PI);
         this._ctx.stroke();
         this._ctx.beginPath();
         this._ctx.arc(this._middleX, this._middleY, this._inInner, 0, 2 * Math.PI);
@@ -463,6 +450,12 @@ class Doughnut {
         return exportText;
     }
 
+    _debug(text) {
+        let debug = document.getElementById("debug");
+        let current = debug.innerHTML;
+        debug.innerHTML = current + "<br>\n" + text;
+    }
+
     update() {
         if (this._innerId) {
             document.getElementById(this._innerId).innerHTML = "Inner: " + this._innerDims.string();
@@ -475,6 +468,7 @@ class Doughnut {
         }
 
         this._setupCanvas();
+        this._drawDoughnut();
         this._drawOuterDimensions();
         this._drawInnerDimensions();
         this._drawLimits();
