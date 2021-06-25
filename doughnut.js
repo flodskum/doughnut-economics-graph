@@ -31,23 +31,37 @@ class _DoughnutDimensions {
         this.dimensions = [];
     }
     add(name, value, label) {
-        if (name == "") {
-            alert("Please enter a dimension name")
-        } else {
+        if(name) {
             let val = parseInt(value);
             if (val > 100) { val = this.maxVal; }
-            if (val < -100) { val = -100; }
+            if (val < -100) { val = "NaN"; }
             let level = { value: val, label: label };
             let index = this.find(name);
             if (index >= 0) {
-                this.dimensions[index].levels.push(level);
+                let found = false;
+                for (let lvl of this.dimensions[index].levels) {
+                    if (lvl.label == label) {
+                        // Update existing level
+                        lvl.value = val;
+                        found = true;
+                    }
+                }
+                // Add new level
+                if (!found) { this.dimensions[index].levels.push(level); }
             } else {
+                // New dimension
                 this.dimensions.push({ name: name, levels: [level] });
             }
         }
     }
     get(index) {
         return this.dimensions[index];
+    }
+    delete(index, level_num) {
+        this.dimensions[index].levels.splice(level_num,1);
+        if( this.dimensions[index].levels.length == 0 ) { 
+            this.dimensions.splice(index, 1); 
+        }
     }
     deleteLast() {
         if (this.dimensions.length > 0) {
@@ -157,13 +171,13 @@ class Doughnut {
         this._donutFrosting = "rgb(71,112,32)";
         this._donutFilling = "rgb(140,215,85)";
 
-        let canvas = document.getElementById(canvasId);
-        this._ctx = canvas.getContext("2d");
+        this._canvas = document.getElementById(canvasId);
+        this._ctx = this._canvas.getContext("2d");
         // Set size of canvas & div to the required doughnut size
-        canvas.style.width = this._donutSize;
-        canvas.style.height = this._donutSize;
-        canvas.width = this._donutSize;
-        canvas.height = this._donutSize;
+        this._canvas.style.width = this._donutSize;
+        this._canvas.style.height = this._donutSize;
+        this._canvas.width = this._donutSize;
+        this._canvas.height = this._donutSize;
         let div = document.getElementById(divId);
         div.style.maxWidth = this._donutSize;
     
@@ -180,29 +194,68 @@ class Doughnut {
         this._outerDims = new _DoughnutDimensions("outer", this._maxDonutRadius);
         this._innerPaths = null;
         this._outerPaths = null;
-
-        canvas.addEventListener("mousemove", (e) => {
-            let caption = this._checkMouseOver(e.offsetX, e.offsetY);
-            if (caption) {
-                if (this._infoId) {
-                    document.getElementById(this._infoId).innerHTML = "Dimension Info: " + caption;
-                }
-                canvas.style.cursor = "crosshair";
-            } else {
-                if (this._infoId) {
-                    document.getElementById(this._infoId).innerHTML = "Dimension Info: None";
-                }
-                canvas.style.cursor = "default";
-            }
-         });
+        this._selectedDimInfo = null;
+    
+        this._canvas.addEventListener("mousemove", (e) => { this._checkMouse(e, false)});
+        this._canvas.addEventListener("click", (e) => { this._checkMouse(e, true)});
 
         // Call first draw
         this.update();
     }
 
+    _matchingDimInfos(one, two) {
+        if (!one && !two) { return true; }
+        if (!one || !two) { return false; }
+        if (one.dim_type == two.dim_type &&
+            one.dim_num == two.dim_num &&
+            one.lvl_num == two.lvl_num) { return true; }
+        return false;
+    }
+
+    _getDimInfoText(dimInfo) {
+        let info = dimInfo.dim_info;
+        let text = info.name;
+        let lvl = dimInfo.lvl_num;
+        if (info.levels[lvl].label) { text += " (measure: " + info.levels[lvl].label + ")" }
+        text += " = " + info.levels[lvl].value;
+        return text; 
+    }
+
+    _checkMouse(e, click) {
+        let hoverDimInfo = this._checkMouseOver(e.offsetX, e.offsetY);
+        let hoverText = "";
+        if (hoverDimInfo) {
+            this._canvas.style.cursor = "crosshair";
+            hoverText = this._getDimInfoText(hoverDimInfo);
+            if (click) {
+                if (this._matchingDimInfos(this._selectedDimInfo, hoverDimInfo)) {
+                    // Unselect
+                    this._selectedDimInfo = null;
+                } else {
+                    // New selection
+                    this._selectedDimInfo = hoverDimInfo;
+                }
+                this.update()
+            }
+        } else {
+            this._canvas.style.cursor = "default";
+            hoverText = "None";
+        }
+        this._updateInfo(hoverText);
+    }
+
+    _updateInfo(hoverText) {
+        if (this._infoId) {
+            let selectText = "None"
+            if (this._selectedDimInfo) {
+                selectText = this._getDimInfoText(this._selectedDimInfo);
+            }
+            let html = "<p>Hover: " + hoverText + "</p><p>Select: " + selectText + "</p>";
+            document.getElementById(this._infoId).innerHTML = html;                     
+        }
+    }
     _checkMousePathsDims(dims, paths, x, y) {
-        let caption = "";
-        let found = false;
+        let found = null;
         //this._debug(x + "," + y);
         let dim = 0, lvl = 0;
         for (dim = 0; dim < dims.length(); dim++) {
@@ -210,47 +263,72 @@ class Doughnut {
             for (lvl = 0; lvl < subpaths.length; lvl++) {
                 if (this._ctx.isPointInPath(subpaths[lvl], x, y)) {
                     //this._debug("found");
-                    found = true;
+                    found = { dim_num: dim,
+                              dim_type: dims.type,
+                              dim_info: dims.get(dim), 
+                              lvl_num: lvl,
+                              path: subpaths[lvl] };
                     break;
                 }
             }
             if (found) { break; }
         }
-        if (found) {
-            let info = dims.get(dim);
-            caption = info.name;
-            if (info.levels[lvl].label) { caption += "/" + info.levels[lvl].label }
-            caption += " = " + info.levels[lvl].value;
-            //this._debug("Mouse over: " + caption );
-        }
-        return caption;
+        return found;
     }
 
     _checkMouseOver(x, y) {
-        let caption = "";
+        let hoverDimInfo = null;
         if (this._innerPaths != null) {
-            caption = this._checkMousePathsDims(this._innerDims, this._innerPaths, x, y);
+            hoverDimInfo = this._checkMousePathsDims(this._innerDims, this._innerPaths, x, y);
         }
-        if (!caption && this._outerPaths != null) {
-            caption = this._checkMousePathsDims(this._outerDims, this._outerPaths, x, y);
+        if (!hoverDimInfo && this._outerPaths != null) {
+            hoverDimInfo = this._checkMousePathsDims(this._outerDims, this._outerPaths, x, y);
         }
-        return caption;
+        return hoverDimInfo;
     }
 
-    addOuter(name, level, label) {
-        this._outerDims.add(name, level, label);
+    addDimension(type, name, level, label) {
+        if (type == "outer") {
+            this._outerDims.add(name, level, label);
+        } else if (type == "inner") {
+            this._innerDims.add(name, level, label);
+        }
+        this._selectedDimInfo = null;
+        this._updateInfo("None");
         this.update();
     }
-    addInner(name, level, label) {
-        this._innerDims.add(name, level, label);
-        this.update();
+
+    delSelectedDimension() {
+        if (this._selectedDimInfo) {
+            if (this._selectedDimInfo.dim_type == "outer") {
+                this._outerDims.delete(this._selectedDimInfo.dim_num, this._selectedDimInfo.level_num);
+            } else {
+                this._innerDims.delete(this._selectedDimInfo.dim_num, this._selectedDimInfo.level_num);
+            }
+            this._selectedDimInfo = null;
+            this._updateInfo("None");
+            this.update();
+        }
     }
-    delOuter() {
-        this._outerDims.deleteLast();
-        this.update();
+
+    getSelectedDimension() {
+        if (this._selectedDimInfo) {
+            let info = this._selectedDimInfo.dim_info;
+            let lvl = this._selectedDimInfo.lvl_num;
+            return { type: this._selectedDimInfo.dim_type, 
+                    name: info.name,
+                    level: info.levels[lvl].value,
+                    label: info.levels[lvl].label };
+        }
+        return null;
     }
-    delInner() {
-        this._innerDims.deleteLast();
+
+    delLastDimension(type) {
+        if (type == "outer") {
+            this._outerDims.deleteLast();
+        } else if (type == "inner") {
+            this._innerDims.deleteLast();
+        }        
         this.update();
     }
 
@@ -579,5 +657,10 @@ class Doughnut {
         this._ctx.fillStyle = "black";
         this._ctx.fillText("Doughnut", this._middleX, this._middleY - this._textSize);
         this._ctx.fillText("Economics", this._middleX, this._middleY + this._textSize)
+
+        if (this._selectedDimInfo) {
+            this._ctx.strokeStyle = "blue";
+            this._ctx.stroke(this._selectedDimInfo.path)    
+        }
     }
 }
