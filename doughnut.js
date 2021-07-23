@@ -33,8 +33,8 @@ class _DoughnutDimensions {
     add(name, value, label) {
         if(name) {
             let val = parseInt(value);
-            if (val > 100) { val = this.maxVal; }
-            if (val < -100) { val = "NaN"; }
+            if (val > this._normalDonutLevelRadius) { val = this.maxVal; }
+            if (val < this._minDonutLevelRadius) { val = "NaN"; }
             let level = { value: val, label: label };
             let index = this.find(name);
             if (index >= 0) {
@@ -140,7 +140,7 @@ class Doughnut {
     // innerId: Optional id of paragraph to show inner dimensions list
     // outerId: Optional id of paragraph to show outer dimensions list
     // exportId: Optional id of textarea to show export CSV string
-    constructor(size, canvasId, divId, infoId, innerId, outerId, exportId) {
+    constructor(size, textSize, canvasId, divId, infoId, innerId, outerId, exportId) {
         this._donutSize = size;
         this._canvasId = canvasId;
         this._divId = divId;
@@ -149,11 +149,14 @@ class Doughnut {
         this._outerId = outerId;
         this._exportId = exportId;
 
+        // Fudge factor adjusetment for hard coded values to be scaled based on given size
+        let fudge = (size/640);
+
         // Size of doughnut dimensions
         this._middleX = this._donutSize / 2;
         this._middleY = this._donutSize / 2;
-        this._donutLineSize = 16;   // For the outer/inner safe zone lines
-        this._donutMargin = 100;    // The space around the whole doughnut diagram
+        this._donutLineSize = Math.round(16 * fudge);  // For the outer/inner safe zone lines
+        this._donutMargin = Math.round(100 * fudge);   // The space around the whole doughnut diagram
         this._section = (this._donutSize - this._donutMargin) / 8;
         this._inInner = this._section;
         this._outInner = this._inInner + this._section; // this._section * 2
@@ -162,14 +165,18 @@ class Doughnut {
         this._midDonut = this._inDonut + (this._outDonut - this._inDonut) / 2;
         this._inOuter = this._outDonut;
         this._outOuter = this._inOuter + this._section; // this._section * 4
-        this._extraDonut = this._outOuter + 25;   // For the complete overshoot
-        this._textSize = 14;
+        this._extraDonut = this._outOuter + Math.round(25 * fudge);   // For the complete overshoot
+        this._textSize = textSize;
         this._arcLineWidth = 2;
         this._textInner = this._outInner + (this._section / 2);
         this._textOuter = this._outOuter - this._textSize;
-        this._maxDonutRadius = 150;
         this._donutFrosting = "rgb(71,112,32)";
         this._donutFilling = "rgb(140,215,85)";
+
+        // Dimension level values
+        this._minDonutLevelRadius = -100;
+        this._normalDonutLevelRadius = 100;
+        this._maxDonutLevelRadius = 150;    // For maximum overshoot!
 
         this._canvas = document.getElementById(canvasId);
         this._ctx = this._canvas.getContext("2d");
@@ -190,8 +197,8 @@ class Doughnut {
         this._grdPersonal.addColorStop(1, "rgb(224,150,198)");
     
         this._grd = this._grdPersonal;
-        this._innerDims = new _DoughnutDimensions("inner", 100);
-        this._outerDims = new _DoughnutDimensions("outer", this._maxDonutRadius);
+        this._innerDims = new _DoughnutDimensions("inner", this._normalDonutLevelRadius);
+        this._outerDims = new _DoughnutDimensions("outer", this._maxDonutLevelRadius);
         this._innerPaths = null;
         this._outerPaths = null;
         this._selectedDimInfo = null;
@@ -336,6 +343,10 @@ class Doughnut {
         this._innerDims.clear();
         this._outerDims.clear();
         this.update();
+    }
+
+    isEmptyDoughnut() {
+        return (this._innerDims.length() == 0 && this._outerDims.length() == 0)
     }
 
     // Import via CSV format:
@@ -501,8 +512,8 @@ class Doughnut {
             let inRadii = [];
             let outRadii = [];
             let colRadii = [];
-            let extScale = (extMax - extMin) / 100;
-            let intScale = ((this._outDonut - this._inDonut) / 2) / 100;
+            let extScale = (extMax - extMin) / this._normalDonutLevelRadius;
+            let intScale = ((this._outDonut - this._inDonut) / 2) / this._normalDonutLevelRadius;
             let type = null;
             let min = 0, max =0;
             if (extMax > this._outDonut) { 
@@ -525,7 +536,7 @@ class Doughnut {
                     let inner = 0;
                     let col = this._grd;
                     if (this._isNotNumber(val)) {
-                        val = 100;
+                        val = this._normalDonutLevelRadius;
                         col = "lightgray";
                     }
                     if (type == INNER) {
@@ -536,7 +547,7 @@ class Doughnut {
                             outer = extMax - (val * intScale);
                             col = "white"
                         } else {
-                            inner = extMin + ((100 - val) * extScale);
+                            inner = extMin + ((this._normalDonutLevelRadius - val) * extScale);
                             outer = extMax;
                         }
                     } else {

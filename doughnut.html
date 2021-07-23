@@ -29,7 +29,7 @@ SOFTWARE.
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Doughnut Creator</title>
 </head>
 <style>
     * {
@@ -72,10 +72,39 @@ SOFTWARE.
 
 <body>
     <div id="box">
-        <h1>Doughnut Creator v4.1</h1>
+        <h1>Doughnut Creator v4.2</h1>
         <p> Welcome to the dougnut creator, where you can play with creating your own
             personal doughnut, or think about and explore a local or global doughnut.
         </p>
+        <p> To find out how you could use creator, have a look at this
+            <a href="https://www.cambridgedoughnut.org.uk/creating-doughnut-graphs/">blogpost.</a>
+        </p>
+        <p> And here are some more thoughts on the usage of
+            <a href="https://www.cambridgedoughnut.org.uk/the-big-personal-doughnut-debate/">personal doughnuts</a>
+        </p>
+    </div>
+    <div id="box">
+        <h3>Set up and Testing</h3>
+        <form name="Options">
+            <p>Doughnut Type: <input type="radio" id="personalCol" name="donutCols" value="personal" checked="checked"
+                    onclick="setColours(1)">
+                  <label for="personal">Personal</label>
+                  <input type="radio" id="globalCol" name="donutCols" value="global" onClick="setColours(2)">
+                  <label for="global">Global/Local</label>
+            </p>
+            <p>Doughnut Size: <input type="radio" id="smallSize" name="donutSize" value="small" 
+                onclick="setSize(1)">
+              <label for="small">Small</label>
+              <input type="radio" id="mediumSize" name="donutSize" value="medium" checked="checked" onClick="setSize(2)">
+              <label for="medium">Medium</label>
+              <input type="radio" id="largeSize" name="donutSize" value="large" onClick="setSize(3)">
+              <label for="large">Large</label>
+            </p>
+            <p><input name="test1Button" type="button" value=" Test Personal " onclick="testIt(1)">
+                <input name="test2Button" type="button" value=" Test Global " onclick="testIt(2)">
+                <input name="clearButton" type="button" value=" Clear " onclick="clearDoughnut()">
+            </p>
+        </form>
     </div>
 
     <div id="doughnutDiv">
@@ -120,21 +149,6 @@ SOFTWARE.
             </p>
         </form>
     </div>
-    <div id="box">
-        <h3>Other options</h3>
-        <form name="Options">
-            <p>Doughnut Type: <input type="radio" id="personalCol" name="donutCols" value="personal" checked="checked"
-                    onclick="setColours(1)">
-                  <label for="personal">Personal</label>
-                  <input type="radio" id="globalCol" name="donutCols" value="global" onClick="setColours(2)">
-                  <label for="global">Global/Local</label>
-            </p>
-            <p><input name="test1Button" type="button" value=" Test Personal " onclick="testIt(1)">
-                <input name="test2Button" type="button" value=" Test Global " onclick="testIt(2)">
-                <input name="clearButton" type="button" value=" Clear " onclick="clearDoughnut()">
-            </p>
-        </form>
-    </div>
 
     <div id="box">
         <h3>Dimension lists</h3>
@@ -148,6 +162,11 @@ SOFTWARE.
         </form>
     </div>
     <p id="debug"></p>
+
+    <p>Created by Jezz at 
+        <a href="https://www.cambridgedoughnut.org.uk">Cambridge Doughnut Economics - contact us via our website</a></p>
+    <p>Copyright (c) 2021</p>
+    <p>Open source project on <a href="https://github.com/flodskum/doughnut-economics-graph">GithHub</a></p>
 </body>
 
 <script src="doughnut.js"></script>
@@ -227,8 +246,7 @@ SOFTWARE.
     }
 
     function testIt(number) {
-        if (confirm("This will clear the current doughnut, are you sure?")) {
-            myDonut.clearDoughnut();
+        if (clearDoughnut()) {
             switch (number) {
                 case 1: // Personal
                     for (dim = 0; dim < testPInner.length; dim++) {
@@ -262,10 +280,33 @@ SOFTWARE.
         myDonut.setColours(number);
         updateLevelName();
     }
-    function clearDoughnut() {
-        if (confirm("This will clear the current doughnut, are you sure?")) {
-            myDonut.clearDoughnut();
+
+    function setSize(number) {
+        if (myDonut == null || clearDoughnut())
+        {
+            let size = 640;
+            let textSize = 14;
+            if (number == 1) {
+                size = 350;
+                textSize = 10;
+            } else if (number == 3) {
+                size = 960;
+                textSize = 21;
+            }
+            myDonut = new Doughnut(size, textSize, "doughnutCanvas", "doughnutDiv", "dimensionInfo", "innerDims", "outerDims", "csv");
+            updateLevelName();
         }
+    }
+
+    function clearDoughnut() {
+        if (!myDonut.isEmptyDoughnut()) {
+            if (confirm("This will clear the current doughnut, are you sure?")) {
+                myDonut.clearDoughnut();
+                return true;
+            }
+            return false;
+        }
+        return true;
     }
 
     function addDim(type, name, level, label) {
@@ -302,8 +343,9 @@ SOFTWARE.
         myDonut.import(csv);
     }
 
-    myDonut = new Doughnut(640, "doughnutCanvas", "doughnutDiv", "dimensionInfo", "innerDims", "outerDims", "csv");
-    updateLevelName();
+    // Main setup - create donut variable by setting size
+    myDonut = null;
+    setSize(2);
 
 </script>
 
