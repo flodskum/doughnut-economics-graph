@@ -40,7 +40,8 @@ class _DoughnutDimensions {
             if (index >= 0) {
                 let found = false;
                 for (let lvl of this.dimensions[index].levels) {
-                    if (lvl.label == label) {
+                    if (label == "undefined") { label = "" }
+                    if (lvl.label == label || (!lvl.label && !label)) {
                         // Update existing level
                         lvl.value = val;
                         found = true;
@@ -83,7 +84,7 @@ class _DoughnutDimensions {
             for (let lvlNo = 0; lvlNo < dim.levels.length; lvlNo++) {
                 let level = dim.levels[lvlNo];
                 if (lvlNo > 0) { string += "," }
-                if (level.label != "") { string += level.label + "=" }
+                if (level.label) { string += level.label + "=" }
                 string += level.value;
             }
         }
@@ -97,7 +98,9 @@ class _DoughnutDimensions {
             let dim = this.dimensions[dimNo];
             for (let level of dim.levels) {
                 let row = this.type + "," + dim.name + ",";
-                row += level.value + "," + level.label;
+                let label = "";
+                if (level.label) { label = level.label }
+                row += level.value + "," + label;
                 csv.push(row);
             }
         }
@@ -322,10 +325,12 @@ class Doughnut {
         if (this._selectedDimInfo) {
             let info = this._selectedDimInfo.dim_info;
             let lvl = this._selectedDimInfo.lvl_num;
+            let label = "";
+            if (info.levels[lvl].label) { label = info.levels[lvl].label };
             return { type: this._selectedDimInfo.dim_type, 
                     name: info.name,
                     level: info.levels[lvl].value,
-                    label: info.levels[lvl].label };
+                    label: label };
         }
         return null;
     }
