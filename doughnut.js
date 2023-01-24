@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2021 Jeremy Johnson
+Copyright (c) 2021-23 Jeremy Johnson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -369,9 +369,13 @@ class Doughnut {
         this.update();
     }
 
-    setColours(number) {
+    setColours(number, inner, outer) {
+        //this._debug(number + "," + inner + "," + outer);
         switch (number) {
             case 1:
+                this._grdPersonal = this._ctx.createRadialGradient(this._middleX, this._middleY, this._inInner, this._middleX, this._middleY, this._outOuter);
+                this._grdPersonal.addColorStop(0, inner);
+                this._grdPersonal.addColorStop(1, outer);
                 this._grd = this._grdPersonal;
                 break;
             case 2:

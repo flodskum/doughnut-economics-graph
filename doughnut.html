@@ -4,7 +4,7 @@
 <!-- 
 MIT License
 
-Copyright (c) 2021 Jeremy Johnson
+Copyright (c) 2021-23 Jeremy Johnson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -72,7 +72,7 @@ SOFTWARE.
 
 <body>
     <div id="box">
-        <h1>Doughnut Creator v4.3</h1>
+        <h1>Doughnut Creator v4.4</h1>
         <p> Welcome to the dougnut creator, where you can play with creating your own
             personal doughnut, or think about and explore a local or global doughnut.
         </p>
@@ -86,19 +86,25 @@ SOFTWARE.
     <div id="box">
         <h3>Set up and Testing</h3>
         <form name="Options">
-            <p>Doughnut Type: <input type="radio" id="personalCol" name="donutCols" value="personal" checked="checked"
-                    onclick="setColours(1)">
-                  <label for="personal">Personal</label>
-                  <input type="radio" id="globalCol" name="donutCols" value="global" onClick="setColours(2)">
-                  <label for="global">Global/Local</label>
+            <p>Doughnut Type: <input type="radio" id="personalType" name="donutType" value="personal" checked="checked"
+                    onclick="setType(1)">
+                    <label for="personal">Personal</label>
+                    <input type="radio" id="globalType" name="donutType" value="global" onClick="setType(2)">
+                    <label for="global">Global/Local</label>
+            </p>
+            <p>Doughnut Colours (Personal only):
+                <input type="color" id="innerCol" name="innerCol" value="#883251" onChange="setColours()">
+                <label for="outerCol">Inner</label>
+                <input type="color" id="outerCol" name="outerCol" value="#E096C6" onChange="setColours()">
+                <label for="outerCol">Outer</label>
             </p>
             <p>Doughnut Size: <input type="radio" id="smallSize" name="donutSize" value="small" 
                 onclick="setSize(1)">
-              <label for="small">Small</label>
-              <input type="radio" id="mediumSize" name="donutSize" value="medium" checked="checked" onClick="setSize(2)">
-              <label for="medium">Medium</label>
-              <input type="radio" id="largeSize" name="donutSize" value="large" onClick="setSize(3)">
-              <label for="large">Large</label>
+                <label for="small">Small</label>
+                <input type="radio" id="mediumSize" name="donutSize" value="medium" checked="checked" onClick="setSize(2)">
+                <label for="medium">Medium</label>
+                <input type="radio" id="largeSize" name="donutSize" value="large" onClick="setSize(3)">
+                <label for="large">Large</label>
             </p>
             <p><input name="test1Button" type="button" value=" Test Personal " onclick="testIt(1)">
                 <input name="test2Button" type="button" value=" Test Global " onclick="testIt(2)">
@@ -130,9 +136,9 @@ SOFTWARE.
         <h3>Add/Edit Dimension</h3>
         <form name="addDims">
             <p>Type: <input type="radio" id="dimOuter" name="dimType" value="outer" checked="checked">
-                  <label for="dimOuter">outer</label>
-                  <input type="radio" id="dimInner" name="dimType" value="inner">
-                  <label for="dimInner">inner</label></p>
+                    <label for="dimOuter">outer</label>
+                    <input type="radio" id="dimInner" name="dimType" value="inner">
+                    <label for="dimInner">inner</label></p>
             <p>Name: <input id="dimName" list="suggestions" size="50px" onfocus="fillSuggestions()">
                 <datalist id="suggestions">
                 </datalist>
@@ -165,13 +171,13 @@ SOFTWARE.
 
     <p>Created by Jezz at 
         <a href="https://www.cambridgedoughnut.org.uk">Cambridge Doughnut Economics - contact us via our website</a></p>
-    <p>Copyright (c) 2021</p>
+    <p>Copyright (c) 2021-23</p>
     <p>Open source project on <a href="https://github.com/flodskum/doughnut-economics-graph">GithHub</a></p>
 </body>
 
 
 <!-- Update value to force reload of new version of script -->
-<script src="doughnut.js?4.3"></script>
+<script src="doughnut.js?4.4"></script>
 
 <script>
     const testPInner = ["moral code", "relationships", "security/respect", "health", "nutrition", "community", "home", "income", "nature", "self aware"];
@@ -182,14 +188,14 @@ SOFTWARE.
     const levelNamesG = { "-150": "unknown", "-100": "no problem", "-50": "under control", "0": "on track", "50": "not good", "100": "out of control", "150": "run away disaster" }
     const levelNamesP = { "-150": "unsure", "-100": "wonderful", "-50": "happy", "0": "spot on", "50": "concerning", "100": "needs work", "150": "needs work" }
 
-    function getDonutColour() {
-        return document.querySelector('input[name="donutCols"]:checked').value;
+    function getDonutType() {
+        return document.querySelector('input[name="donutType"]:checked').value;
     }
 
     function updateLevelName() {
         let value = document.getElementById("dimLevel").value;
         let name = document.getElementById("dimLevelName")
-        let donut = getDonutColour();
+        let donut = getDonutType();
         if (donut == "personal") {
             name.value = levelNamesP[value] + " (" + value + ")";
         } else {
@@ -201,7 +207,7 @@ SOFTWARE.
         let suggestions = document.getElementById("suggestions");
         suggestions.innerHTML = ""; // Reset
         let type = document.querySelector('input[name="dimType"]:checked').value;
-        let donut = getDonutColour();
+        let donut = getDonutType();
         let selection = null;
         if (donut == "personal") {
             if (type == "outer") { selection = testPOuter; } else { selection = testPInner; }
@@ -258,7 +264,7 @@ SOFTWARE.
                     for (dim = 0; dim < testPOuter.length; dim++) {
                         myDonut.addDimension("outer", testPOuter[dim], _randPersonalValue(), "");
                     }
-                    setColours(1);
+                    setType(1);
                     break;
                 case 2: // Global
                     for (dim = 0; dim < testGInner.length; dim++) {
@@ -268,20 +274,30 @@ SOFTWARE.
                     for (dim = 0; dim < testGOuter.length; dim++) {
                         myDonut.addDimension("outer", testGOuter[dim], _randGlobalValue());
                     }
-                    setColours(2);
+                    setType(2);
                     break;
             }
         }
     }
 
-    function setColours(number) {
+    function setType(number) {
         if (number == 1) {
-            document.getElementById("personalCol").checked = true;
+            document.getElementById("personalType").checked = true;
         } else {
-            document.getElementById("globalCol").checked = true;
+            document.getElementById("globalType").checked = true;
         }
-        myDonut.setColours(number);
+        let inner = document.getElementById("innerCol").value;
+        let outer = document.getElementById("outerCol").value;
+        myDonut.setColours(number, inner, outer);
         updateLevelName();
+    }
+
+    function setColours() {
+        let number = 1;
+        if (document.getElementById("globalType").checked) {
+            number = 2;
+        }
+        setType(number);
     }
 
     function setSize(number) {
@@ -297,6 +313,7 @@ SOFTWARE.
                 textSize = 21;
             }
             myDonut = new Doughnut(size, textSize, "doughnutCanvas", "doughnutDiv", "dimensionInfo", "innerDims", "outerDims", "csv");
+            setColours()
             updateLevelName();
         }
     }
@@ -313,7 +330,7 @@ SOFTWARE.
     }
 
     function addDim(type, name, level, label) {
-        let donut = getDonutColour();
+        let donut = getDonutType();
         if (!name) {
             alert("Please enter a dimension name.")
         } else {
