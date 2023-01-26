@@ -136,21 +136,31 @@ class _DoughnutDimensions {
 }
     
 class Doughnut {
-    // size: Size of doughnut
+    // size: Size of whole doughnut
+    // donutScale: scaling factor for the doughnut (between 0.5 and 1.5)
+    // textSize: text size
     // canvasId: Id of canvas element to draw the doughnut into
     // divId: Id of div element that canvas is in (to allow resize correctly)
     // infoId: Optional id of doughnut dimension info
     // innerId: Optional id of paragraph to show inner dimensions list
     // outerId: Optional id of paragraph to show outer dimensions list
     // exportId: Optional id of textarea to show export CSV string
-    constructor(size, textSize, canvasId, divId, infoId, innerId, outerId, exportId) {
+    constructor(size, donutScale, textSize, canvasId, divId, infoId, innerId, outerId, exportId) {
         this._donutSize = size;
+        this._textSize = textSize;
+        if (donutScale >= 0.5 && donutScale <= 1.5) {
+            this._donutScale = donutScale;
+        } else {
+            this._donutScale = 1.0;
+        }
         this._canvasId = canvasId;
         this._divId = divId;
         this._infoId = infoId;
         this._innerId = innerId;
         this._outerId = outerId;
         this._exportId = exportId;
+
+        //this._debug("size: " + this._donutSize + " / scale: " + this._donutScale);
 
         // Fudge factor adjusetment for hard coded values to be scaled based on given size
         let fudge = (size/640);
@@ -162,14 +172,16 @@ class Doughnut {
         this._donutMargin = Math.round(100 * fudge);   // The space around the whole doughnut diagram
         this._section = (this._donutSize - this._donutMargin) / 8;
         this._inInner = this._section;
-        this._outInner = this._inInner + this._section; // this._section * 2
+        this._donutRingSize = this._section * this._donutScale;
+        let overlapDonut = (this._donutRingSize - this._section) / 2;
+        //this._debug("section: " + this._section + " / donutRingSize: " + this._donutRingSize + " / overlap: " + overlapDonut);
+        this._outInner = this._inInner + this._section - overlapDonut; 
         this._inDonut = this._outInner;
-        this._outDonut = this._inDonut + this._section; // this._section * 3
+        this._outDonut = this._inDonut + this._donutRingSize; 
         this._midDonut = this._inDonut + (this._outDonut - this._inDonut) / 2;
         this._inOuter = this._outDonut;
-        this._outOuter = this._inOuter + this._section; // this._section * 4
+        this._outOuter = this._inOuter + this._section; 
         this._extraDonut = this._outOuter + Math.round(25 * fudge);   // For the complete overshoot
-        this._textSize = textSize;
         this._arcLineWidth = 2;
         this._textInner = this._outInner + (this._section / 2);
         this._textOuter = this._outOuter - this._textSize;

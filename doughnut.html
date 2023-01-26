@@ -72,7 +72,7 @@ SOFTWARE.
 
 <body>
     <div id="box">
-        <h1>Doughnut Creator v4.4</h1>
+        <h1>Doughnut Creator v4.5</h1>
         <p> Welcome to the dougnut creator, where you can play with creating your own
             personal doughnut, or think about and explore a local or global doughnut.
         </p>
@@ -105,6 +105,9 @@ SOFTWARE.
                 <label for="medium">Medium</label>
                 <input type="radio" id="largeSize" name="donutSize" value="large" onClick="setSize(3)">
                 <label for="large">Large</label>
+            </p>
+            <p>Doughnut Ring Size: <input type="range" min="0.5" max="1.5" value="1.0" class="slider" id="ringSize" step="0.25"
+                onchange="setRingSize()">
             </p>
             <p><input name="test1Button" type="button" value=" Test Personal " onclick="testIt(1)">
                 <input name="test2Button" type="button" value=" Test Global " onclick="testIt(2)">
@@ -177,7 +180,7 @@ SOFTWARE.
 
 
 <!-- Update value to force reload of new version of script -->
-<script src="doughnut.js?4.4"></script>
+<script src="doughnut.js?4.5"></script>
 
 <script>
     const testPInner = ["moral code", "relationships", "security/respect", "health", "nutrition", "community", "home", "income", "nature", "self aware"];
@@ -312,10 +315,22 @@ SOFTWARE.
                 size = 960;
                 textSize = 21;
             }
-            myDonut = new Doughnut(size, textSize, "doughnutCanvas", "doughnutDiv", "dimensionInfo", "innerDims", "outerDims", "csv");
+            let scale = document.getElementById("ringSize").value;
+            myDonut = new Doughnut(size, scale, textSize, "doughnutCanvas", "doughnutDiv", "dimensionInfo", "innerDims", "outerDims", "csv");
             setColours()
             updateLevelName();
         }
+    }
+
+    function setRingSize() {
+        if (document.getElementById("smallSize").checked) {
+            number = 1;
+        } else if (document.getElementById("largeSize").checked) {
+            number = 3;
+        } else {
+            number = 2;
+        }
+        setSize(number);
     }
 
     function clearDoughnut() {
