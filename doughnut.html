@@ -72,7 +72,7 @@ SOFTWARE.
 
 <body>
     <div id="box">
-        <h1>Doughnut Creator v4.5</h1>
+        <h1>Doughnut Creator v4.6</h1>
         <p> Welcome to the dougnut creator, where you can play with creating your own
             personal doughnut, or think about and explore a local or global doughnut.
         </p>
@@ -97,6 +97,10 @@ SOFTWARE.
                 <label for="outerCol">Inner</label>
                 <input type="color" id="outerCol" name="outerCol" value="#E096C6" onChange="setColours()">
                 <label for="outerCol">Outer</label>
+                <input type="radio" id="linearCol" name="colorType" value="linear" checked="checked" onclick="setColours()">
+                <label for="linear">linear</label>
+                <input type="radio" id="branchCol" name="colorType" value="branch" onclick="setColours()">
+                <label for="branch">branching</label>
             </p>
             <p>Doughnut Size: <input type="radio" id="smallSize" name="donutSize" value="small" 
                 onclick="setSize(1)">
@@ -180,7 +184,7 @@ SOFTWARE.
 
 
 <!-- Update value to force reload of new version of script -->
-<script src="doughnut.js?4.5"></script>
+<script src="doughnut.js?4.6"></script>
 
 <script>
     const testPInner = ["moral code", "relationships", "security/respect", "health", "nutrition", "community", "home", "income", "nature", "self aware"];
@@ -286,21 +290,28 @@ SOFTWARE.
     function setType(number) {
         if (number == 1) {
             document.getElementById("personalType").checked = true;
-        } else {
+        } else if (number == 2) {
             document.getElementById("globalType").checked = true;
+        } else {
+            // Use radio settings to discern type
+            number = 1;
+            if (document.getElementById("globalType").checked) {
+                number = 2;
+            }
         }
         let inner = document.getElementById("innerCol").value;
         let outer = document.getElementById("outerCol").value;
-        myDonut.setColours(number, inner, outer);
+        let style = 1;
+        if (document.getElementById("branchCol").checked) {
+            style = 2;
+        }
+        myDonut.setColours(number, style, inner, outer);
         updateLevelName();
     }
 
     function setColours() {
-        let number = 1;
-        if (document.getElementById("globalType").checked) {
-            number = 2;
-        }
-        setType(number);
+        // Use the currently set type, but update the colours
+        setType(0);
     }
 
     function setSize(number) {

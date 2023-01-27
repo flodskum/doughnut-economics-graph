@@ -180,7 +180,7 @@ class Doughnut {
         this._outDonut = this._inDonut + this._donutRingSize; 
         this._midDonut = this._inDonut + (this._outDonut - this._inDonut) / 2;
         this._inOuter = this._outDonut;
-        this._outOuter = this._inOuter + this._section; 
+        this._outOuter = this._inOuter + this._section - overlapDonut;
         this._extraDonut = this._outOuter + Math.round(25 * fudge);   // For the complete overshoot
         this._arcLineWidth = 2;
         this._textInner = this._outInner + (this._section / 2);
@@ -381,13 +381,20 @@ class Doughnut {
         this.update();
     }
 
-    setColours(number, inner, outer) {
+    setColours(number, style, inner, outer) {
         //this._debug(number + "," + inner + "," + outer);
         switch (number) {
             case 1:
                 this._grdPersonal = this._ctx.createRadialGradient(this._middleX, this._middleY, this._inInner, this._middleX, this._middleY, this._outOuter);
-                this._grdPersonal.addColorStop(0, inner);
-                this._grdPersonal.addColorStop(1, outer);
+                if (style == 1) {
+                    this._grdPersonal.addColorStop(0, inner);
+                    this._grdPersonal.addColorStop(1, outer);
+                } else {
+                    this._grdPersonal.addColorStop(0, outer);
+                    this._grdPersonal.addColorStop((this._outInner - this._inInner) / (this._outOuter - this._inInner), inner);
+                    this._grdPersonal.addColorStop((this._inOuter - this._inInner) / (this._outOuter - this._inInner), inner);
+                    this._grdPersonal.addColorStop(1, outer);
+                }
                 this._grd = this._grdPersonal;
                 break;
             case 2:
