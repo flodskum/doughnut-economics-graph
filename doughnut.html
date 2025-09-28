@@ -4,7 +4,7 @@
 <!-- 
 MIT License
 
-Copyright (c) 2021-23 Jeremy Johnson
+Copyright (c) 2021-23, 2025 Jeremy Johnson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -72,8 +72,8 @@ SOFTWARE.
 
 <body>
     <div id="box">
-        <h1>Doughnut Creator v4.6</h1>
-        <p> Welcome to the dougnut creator, where you can play with creating your own
+        <h1>Doughnut Creator v4.6.1</h1>
+        <p> Welcome to the doughnut creator, where you can play with creating your own
             personal doughnut, or think about and explore a local or global doughnut.
         </p>
         <p> To find out how you could use creator, have a look at this
@@ -81,6 +81,17 @@ SOFTWARE.
         </p>
         <p> And here are some more thoughts on the usage of
             <a href="https://www.cambridgedoughnut.org.uk/the-big-personal-doughnut-debate/">personal doughnuts</a>
+        </p>
+
+        <p>Find more info about data portraits on the <a href="https://doughnuteconomics.org">DEAL (Doughnut Economics Action Lab)</a> website:
+            <ul>
+                <li><a href="https://doughnuteconomics.org/tools/doughnut-data-portraits-a-methodological-guide
+">Data portraits - a methodological guide.</a></li>
+                <li><a href="https://doughnuteconomics.org/tools/downscaling-the-doughnut-data-portraits-in-action
+">Downscaling the doughnut - data portraits in action.</a></li>
+                <li>Or perform a search on the DEAL website for "data portrait" which is what they are referred to.
+</li>
+            </ul>
         </p>
     </div>
     <div id="box">
@@ -130,11 +141,13 @@ SOFTWARE.
         <p id="dimensionInfo">Hover over or select dimensions on the doughnut drawing.</p>
         <form name="editDims">
             <p><input name="editDimButton" type="button" value=" Edit Dimension " onclick="editDim()">
-                <input name="delDimButton" type="button" value=" Remove Dimension or Measure " onclick="delDim()">
+                <input name="delDimButton" type="button" value=" Remove Dim. or Measure " onclick="delDim()">
             </p>
-            <p id="note">Note: Edit allows you to change the level value of the selected dimension using the controls
-                below.
-                <br>Renaming it will add a new dimension, but you can then use Remove to delete the original dimension.
+            <p id="note">Notes:
+                <ul>
+                    <li id="note">Edit allows you to change the level value of the selected dimension using the controls below.</li>
+                    <li id="note">Renaming it will add a new dimension, but you can then use Remove to delete the original dimension.</li>
+                </ul>
             </p>
         </form>
     </div>
@@ -154,11 +167,21 @@ SOFTWARE.
                     onchange="updateLevelName()">
                 <input id="dimLevelName" type="text" value="" size="15px" readonly>
             </p>
-            <p id="note">Note: This is the level inside (negative) or outside (positive) the doughnut.</p>
             <p>Measure (optional): <input id="dimLabel" type="text" size="20px"></p>
 
             <p><input id="addDimButton" type="button" value=" Add or Update Dimension "
                     onclick="addDim(addDims.dimType.value, addDims.dimName.value, addDims.dimLevel.value, addDims.dimLabel.value)">
+            </p>
+
+            <p id="note">Notes:
+                <ul>
+                    <li id="note">Levels inside the doughnut are negative values where as positive values are outside the doughnut.</li>
+                    <li id="note">Level scales are in percentages:  ((current value - boundary value) / boundary value) * 100.</li>
+                    <li id="note">(I.e -100% is 0 impact, whereas +100% is double the boundary.)</li>
+                    <li id="note">Level values that exceed the boundary can be expressed as 150.</li>
+                    <li id="note">Level values that are unknown can be entered as "NaN" (not a number).</li>
+                    <li id="note">It is optional to have extra values called measures.</li>
+                </ul>
             </p>
         </form>
     </div>
@@ -173,12 +196,28 @@ SOFTWARE.
             <textarea id="csv" name="CSV" rows="4" cols="50">
             </textarea>
         </form>
+        <p id="note">Notes:
+            <ul>
+                <li id="note">The format of this form is using comma separated values (CSV).</li>
+                <li id="note">To export - copy all the CSV text from the above box.</li>
+                <li id="note">To import - paste the CSV text into the above box (on a CLEAR new doughnut) and press import.</li>
+                <li id="note">The fields of an entry "1,2,3,4":</li>
+                <ul>
+                    <li id="note">1. "inner" or "outer"</li>
+                    <li id="note">2. name of dimension</li>
+                    <li id="note">3. level of dimension - negative is GOOD - within the doughnut, positive is BAD - overshoot or shortfall, NaN means unknown</li>
+                    <li id="note">4. OPTIONAL name of secondary indicator/measure (for inner dimensions if you split them into two)</li>
+                </ul>
+                <li id="note">The ordering of the dimensions starts from 3 o'clock and goes clockwise, so if you want to rearrange things, just move them in the list.</li>
+                <li id="note">You could paste/load the CSV into excel to alter it, but remember to save as CSV and open it in notepad or a text viewer to then copy and paste back into the web form.</li>
+            </ul>
+        </p>
     </div>
     <p id="debug"></p>
 
     <p>Created by Jezz at 
         <a href="https://www.cambridgedoughnut.org.uk">Cambridge Doughnut Economics - contact us via our website</a></p>
-    <p>Copyright (c) 2021-23</p>
+    <p>Copyright (c) 2021-23,2025</p>
     <p>Open source project on <a href="https://github.com/flodskum/doughnut-economics-graph">GithHub</a></p>
 </body>
 
@@ -362,6 +401,8 @@ SOFTWARE.
         } else {
             // Clip personal levels to 100
             if (donut == "personal" && level > 100) { level = 100; }
+            // Turn -150 and lower into NaN
+            if (level < -100) { level = "NaN" }
             myDonut.addDimension(type, name, level, label);
         }
     }
