@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doughnut Outreach Directory</title>
+    <style>
+        :root {
+            --bg: #f5f6f8; --card: #fff; --text: #1a1d21; --muted: #6b7280;
+            --border: #e5e7eb; --accent: #3d8b37;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 2rem; max-width: 900px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; margin-bottom: 0.3rem; }
+        .subtitle { color: var(--muted); margin-bottom: 1.5rem; font-size: 0.9rem; }
+        .back { display: inline-block; margin-bottom: 1rem; color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+        .back:hover { text-decoration: underline; }
+        .contact-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem;
+            padding: 1.25rem; margin-bottom: 1rem; transition: box-shadow 0.2s;
+        }
+        .contact-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .contact-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+        .contact-header h3 { font-size: 1rem; }
+        .contact-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+        .tag { padding: 0.15rem 0.5rem; border-radius: 1rem; font-size: 0.68rem; font-weight: 600; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .tag-eco { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+        .contact-body { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+        .contact-body a { color: var(--accent); }
+        .contact-info { display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 0.75rem; margin-top: 0.5rem; font-size: 0.82rem; }
+        .contact-info dt { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; }
+        .contact-info dd { margin: 0; }
+        .draft-msg {
+            margin-top: 0.75rem; padding: 0.75rem; background: #f9fafb; border: 1px solid var(--border);
+            border-radius: 0.5rem; font-size: 0.8rem; color: var(--muted); white-space: pre-line;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute; top: 0.4rem; right: 0.4rem; background: var(--accent); color: white;
+            border: none; border-radius: 1rem; padding: 0.2rem 0.6rem; font-size: 0.7rem; cursor: pointer;
+        }
+        .copy-btn:hover { filter: brightness(1.1); }
+        .instructions { background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1.5rem; }
+        .instructions h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .instructions p, .instructions li { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+        .instructions ul { margin: 0.5rem 0 0 1.2rem; }
+    </style>
+</head>
+<body>
+    <a href="example-portrait.html" class="back">&larr; Back to doughnut</a>
+    <h1>Outreach Directory Template</h1>
+    <p class="subtitle">Key contacts and institutions for sourcing doughnut data. Customize for your city.</p>
+
+    <div class="instructions">
+        <h2>How to use this template</h2>
+        <p>For each data gap in your doughnut portrait, identify the relevant local institution. Typical sources by dimension:</p>
+        <ul>
+            <li><strong>Food:</strong> Local food bank, county health dept, USDA regional office</li>
+            <li><strong>Health:</strong> County health services, local hospitals, state health dept</li>
+            <li><strong>Education:</strong> School district, state dept of education, local university</li>
+            <li><strong>Income & Work:</strong> Census Bureau (ACS), BLS regional office, workforce development board</li>
+            <li><strong>Housing:</strong> HUD regional office, local housing authority, continuum of care</li>
+            <li><strong>Water:</strong> City/county water department, state water board</li>
+            <li><strong>Energy:</strong> Local utility, state energy commission, community energy programs</li>
+            <li><strong>Climate/Air:</strong> City sustainability office, EPA regional office, state air board</li>
+            <li><strong>Biodiversity:</strong> State fish & wildlife, local land trust, regional conservation district</li>
+            <li><strong>Social Equity:</strong> Community foundation, equity office, National Equity Atlas</li>
+            <li><strong>Political Voice:</strong> County elections office, secretary of state</li>
+        </ul>
+        <p style="margin-top:0.75rem;">Copy the contact card template below and fill in your local contacts.</p>
+    </div>
+
+    <div id="contacts">
+        <!-- Example contact card -->
+        <div class="contact-card">
+            <div class="contact-header">
+                <h3>Example: City Sustainability Office</h3>
+                <div class="contact-tags">
+                    <span class="tag tag-eco">Climate</span>
+                    <span class="tag tag-eco">Energy</span>
+                </div>
+            </div>
+            <div class="contact-body">
+                <p>Primary source for city-level GHG emissions, climate action plans, and renewable energy data. Often publishes annual sustainability reports.</p>
+                <dl class="contact-info">
+                    <dt>Contact</dt><dd>Sustainability Manager</dd>
+                    <dt>Email</dt><dd><a href="#">sustainability@yourcity.gov</a></dd>
+                    <dt>Phone</dt><dd>(xxx) xxx-xxxx</dd>
+                    <dt>Website</dt><dd><a href="#">yourcity.gov/sustainability</a></dd>
+                    <dt>Data needs</dt><dd>GHG inventory, renewable energy %, EV infrastructure, building energy use</dd>
+                </dl>
+                <div class="draft-msg">
+                    <button class="copy-btn" onclick="copyMsg(this)">Copy</button>
+Subject: Data request for Doughnut Economics community portrait
+
+Dear [Name],
+
+We are building a Doughnut Economics portrait for [City] — an open-source community assessment mapping social wellbeing and ecological health using Kate Raworth's framework.
+
+We would greatly appreciate access to the following data:
+- [Specific data points needed]
+
+The portrait will be publicly available with full source attribution. We'd welcome your input on targets and interpretation.
+
+Thank you for your time,
+[Your name]</div>
+            </div>
+        </div>
+
+        <div class="contact-card">
+            <div class="contact-header">
+                <h3>Example: County Elections Office</h3>
+                <div class="contact-tags">
+                    <span class="tag">Political Voice</span>
+                </div>
+            </div>
+            <div class="contact-body">
+                <p>Source for voter turnout, registration rates, and civic participation data at city and county level.</p>
+                <dl class="contact-info">
+                    <dt>Contact</dt><dd>County Clerk / Registrar of Voters</dd>
+                    <dt>Website</dt><dd><a href="#">yourcounty.gov/elections</a></dd>
+                    <dt>Data needs</dt><dd>Voter turnout by election, registration rates, demographics of voters</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="contact-card">
+            <div class="contact-header">
+                <h3>Example: Community Data Hub</h3>
+                <div class="contact-tags">
+                    <span class="tag">Cross-cutting</span>
+                </div>
+            </div>
+            <div class="contact-body">
+                <p>Many cities/counties have a community indicators dashboard (like DataShare, Community Commons, or a local version). These aggregate data from multiple sources and are often the best starting point.</p>
+                <dl class="contact-info">
+                    <dt>Examples</dt><dd>DataShare SCC, Community Commons, County Health Rankings</dd>
+                    <dt>Data needs</dt><dd>All dimensions — these dashboards often cover food, health, education, equity, environment</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function copyMsg(btn) {
+        const text = btn.parentElement.textContent.replace('Copy', '').trim();
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 2000);
+        });
+    }
+    </script>
+</body>
+</html>

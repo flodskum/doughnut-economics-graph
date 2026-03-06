@@ -5,26 +5,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doughnut Data Portrait Example</title>
     <style>
+        :root {
+            --bg: #f5f6f8; --card: #fff; --text: #1a1d21; --muted: #6b7280;
+            --faint: #9ca3af; --border: #e5e7eb; --accent: #3d8b37;
+            --metric-bg: #f9fafb; --shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
         * { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #f8f9fa; }
-        header { background: linear-gradient(135deg, #2d5016, #4a8c1c); color: white; padding: 1.5rem 2rem; }
-        header h1 { font-size: 1.4rem; }
-        header p { opacity: 0.8; font-size: 0.9rem; margin-top: 0.3rem; }
-        .layout { display: grid; grid-template-columns: 1fr 380px; min-height: calc(100vh - 80px); }
+        body { background: var(--bg); color: var(--text); }
+        header {
+            background: linear-gradient(135deg, #1a2f0e, #3d8b37);
+            color: white; padding: 1.25rem 2rem;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+        }
+        header h1 { font-size: 1.35rem; font-weight: 700; }
+        header p { opacity: 0.7; font-size: 0.82rem; }
+        .header-btns { display: flex; gap: 0.4rem; }
+        .header-btn {
+            padding: 0.4rem 0.8rem; border: 1.5px solid rgba(255,255,255,0.3);
+            border-radius: 2rem; background: transparent; color: rgba(255,255,255,0.85);
+            cursor: pointer; font-size: 0.78rem; font-weight: 500; transition: all 0.2s;
+            text-decoration: none;
+        }
+        .header-btn:hover { border-color: white; background: rgba(255,255,255,0.08); color: white; }
+        .layout { display: grid; grid-template-columns: 1fr 400px; min-height: calc(100vh - 64px); }
         .doughnut-section { display: flex; flex-direction: column; align-items: center; padding: 2rem; }
-        .hint { color: #b2bec3; font-size: 0.85rem; margin-top: 0.5rem; }
-        #doughnutDiv { max-width: 640px; }
-        .detail-panel { background: white; border-left: 1px solid #dfe6e9; padding: 1.5rem; overflow-y: auto; max-height: calc(100vh - 80px); }
+        .hint { color: var(--faint); font-size: 0.8rem; margin-top: 0.75rem; }
+        #doughnutDiv { max-width: 640px; width: 100%; }
+        .detail-panel {
+            background: var(--card); border-left: 1px solid var(--border);
+            padding: 1.5rem; overflow-y: auto; max-height: calc(100vh - 64px);
+            position: sticky; top: 0;
+        }
+        .detail-panel p { color: var(--faint); }
         @media (max-width: 900px) {
             .layout { grid-template-columns: 1fr; }
-            .detail-panel { border-left: none; border-top: 1px solid #dfe6e9; max-height: none; }
+            .detail-panel { border-left: none; border-top: 1px solid var(--border); max-height: none; position: relative; }
         }
+
+        /* Agent UI inline styles */
+        .agent-research-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; gap: 0.4rem; align-items: flex-start; flex-wrap: wrap; }
+        .agent-btn { border: none; border-radius: 2rem; padding: 0.45rem 1rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
+        .agent-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .agent-btn-research { background: var(--accent); color: white; }
+        .agent-btn-research:hover:not(:disabled) { filter: brightness(1.1); }
+        .agent-btn-settings { background: var(--metric-bg); color: var(--muted); border: 1px solid var(--border); padding: 0.45rem 0.65rem; font-size: 0.9rem; }
+        .agent-btn-settings:hover { color: var(--accent); border-color: var(--accent); }
+        .agent-btn-primary { background: var(--accent); color: white; }
+        .agent-btn-secondary { background: var(--metric-bg); color: var(--muted); border: 1px solid var(--border); }
+        .agent-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .agent-research-result { width: 100%; margin-top: 0.5rem; }
+        .agent-result-card { background: var(--metric-bg); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1rem; }
+        .agent-result-header { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem; }
+        .agent-result-field { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.3rem; line-height: 1.45; }
+        .agent-result-label { display: inline-block; min-width: 70px; font-size: 0.7rem; text-transform: uppercase; color: var(--faint); font-weight: 600; }
+        .agent-result-field a { color: #3b82f6; text-decoration: none; }
+        .agent-result-actions { list-style: none; padding: 0; margin: 0.2rem 0 0 70px; }
+        .agent-result-actions li { font-size: 0.8rem; padding: 0.15rem 0; }
+        .agent-result-actions li::before { content: "\2192 "; color: var(--accent); }
+        .agent-result-model { font-size: 0.7rem; color: var(--faint); margin-top: 0.5rem; text-align: right; }
+        .agent-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; border-radius: 0.5rem; padding: 0.6rem 0.8rem; font-size: 0.82rem; }
+        .agent-modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+        .agent-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--card); border: 1px solid var(--border); border-radius: 1rem; padding: 1.75rem; width: 420px; max-width: 92vw; z-index: 1000; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+        .agent-modal h3 { font-size: 1.1rem; margin-bottom: 0.3rem; }
+        .agent-modal-desc { font-size: 0.82rem; color: var(--muted); margin-bottom: 1rem; }
+        .agent-modal label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.75rem; }
+        .agent-modal input { display: block; width: 100%; margin-top: 0.25rem; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--metric-bg); color: var(--text); font-size: 0.85rem; }
+        .agent-modal input:focus { outline: none; border-color: var(--accent); }
+        .agent-modal-presets { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
+        .agent-preset { padding: 0.25rem 0.65rem; border-radius: 1rem; font-size: 0.72rem; font-weight: 600; background: var(--metric-bg); border: 1px solid var(--border); color: var(--muted); cursor: pointer; }
+        .agent-preset:hover { border-color: var(--accent); color: var(--accent); }
+        .agent-modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+
+        /* Detail panel styling */
+        .detail-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; }
+        .detail-ring { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .ring-eco { background: #ef4444; }
+        .ring-social { background: #22c55e; }
+        .detail-header h3 { font-size: 1.05rem; font-weight: 700; text-transform: capitalize; }
+        .status { padding: 0.2rem 0.55rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 700; margin-left: auto; text-transform: uppercase; }
+        .detail-metric { background: var(--metric-bg); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1rem; margin-bottom: 0.75rem; }
+        .detail-metric .label { font-size: 0.7rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+        .detail-metric .value { font-size: 1.3rem; font-weight: 800; margin-top: 0.15rem; }
+        .detail-metric .year { font-size: 0.75rem; color: var(--faint); }
+        .detail-metric .target { font-size: 0.82rem; color: #8b5cf6; margin-top: 0.3rem; }
+        .detail-metric .context { font-size: 0.82rem; color: var(--muted); margin-top: 0.4rem; line-height: 1.5; }
+        .detail-source h4, .detail-actions h4 { font-size: 0.7rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 0.3rem; }
+        .detail-source a { color: #3b82f6; text-decoration: none; font-size: 0.85rem; }
+        .detail-actions h4 { color: var(--accent); }
+        .detail-actions ul { list-style: none; }
+        .detail-actions li { padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); line-height: 1.45; }
+        .detail-actions li::before { content: "\2192 "; color: var(--accent); font-weight: bold; }
     </style>
 </head>
 <body>
     <header>
-        <h1>Doughnut Data Portrait</h1>
-        <p>Click any segment to view sourced data, indicators, and actions</p>
+        <div>
+            <h1>Doughnut Data Portrait</h1>
+            <p>Click any segment to view sourced data, indicators, and actions</p>
+        </div>
+        <div class="header-btns">
+            <a href="data-gaps.html" class="header-btn">Data Gaps</a>
+            <a href="outreach-template.html" class="header-btn">Outreach</a>
+            <button class="header-btn" onclick="AgentUI.showSettings()">&#9881; AI Settings</button>
+        </div>
     </header>
 
     <div class="layout">
@@ -35,72 +119,122 @@
             <div class="hint">Click a dimension to explore its data and sources</div>
         </div>
         <div class="detail-panel" id="detailPanel">
-            <p style="color:#999;">Click a dimension to see details.</p>
+            <p>Click a dimension to see details.</p>
         </div>
     </div>
 
     <script src="doughnut.js?4.6"></script>
-    <script src="doughnut-detail.js"></script>
+    <script src="agent-ui.js"></script>
     <script>
         // 1. Create the doughnut
         const myDonut = new Doughnut(640, 1.0, 14, "doughnutCanvas", "doughnutDiv", null, null, null, null);
         myDonut.setColours(2, 1, "#883251", "#E096C6");
 
-        // 2. Attach the detail panel
-        const detail = new DoughnutDetail(myDonut, 'detailPanel');
-
-        // 3. Example data — replace with your own or load from the research agent CLI:
+        // 2. Example data — replace with your city data or load from the research agent:
         //    node tools/cli.js "Your City" "Your State" --output portrait.json
         const exampleData = {
             social: [
-                {
-                    name: "food", level: 50,
-                    indicator: "Food insecurity rate",
-                    value: "12% of households food insecure",
-                    year: 2023,
-                    target: "Below 10%",
-                    context: "Above the national average of 10.2%. Food bank usage increased 30% since 2020.",
-                    source: "USDA Economic Research Service",
-                    sourceUrl: "https://www.ers.usda.gov/topics/food-nutrition-assistance/food-security-in-the-u-s/",
-                    confidence: "high",
-                    actions: ["Donate to local food banks", "Support SNAP enrollment outreach", "Advocate for school meal programs"]
-                },
+                { name: "food", level: 50, indicator: "Food insecurity rate", value: "12% of households", year: 2023, target: "Below 10%", context: "Above national average. Food bank usage increased 30% since 2020.", source: "USDA Economic Research Service", sourceUrl: "https://www.ers.usda.gov/topics/food-nutrition-assistance/food-security-in-the-u-s/", confidence: "high", actions: ["Donate to local food banks", "Support SNAP enrollment outreach", "Advocate for school meal programs"] },
                 { name: "health", level: 0, indicator: "Uninsured rate", value: "5.2%", year: 2023, target: "Universal coverage", context: "Below national average.", source: "Census ACS", sourceUrl: "https://data.census.gov/", confidence: "high", actions: ["Support Medicaid expansion", "Help neighbors enroll in coverage"] },
                 { name: "education", level: -25, indicator: "HS graduation rate", value: "91%", year: 2023, target: "95%+", context: "Near state average.", source: "State Dept of Education", sourceUrl: "", confidence: "medium", actions: ["Volunteer as a tutor"] },
-                { name: "income & work", level: 50, indicator: "Poverty rate", value: "14%", year: 2022, target: "Below 10%", context: "Higher than national average.", source: "Census Bureau", sourceUrl: "https://www.census.gov/quickfacts/", confidence: "high", actions: ["Support living wage campaigns"] },
+                { name: "income & work", level: 50, indicator: "Poverty rate", value: "14%", year: 2022, target: "Below 10%", context: "Higher than national avg.", source: "Census Bureau", sourceUrl: "https://www.census.gov/quickfacts/", confidence: "high", actions: ["Support living wage campaigns"] },
                 { name: "housing", level: 100, indicator: "Cost-burdened households", value: "45%", year: 2023, target: "Below 30%", context: "Housing costs rising faster than wages.", source: "HUD", sourceUrl: "", confidence: "medium", actions: ["Advocate for affordable housing"] },
-                { name: "water & sanitation", level: -50, indicator: "Water quality compliance", value: "100% compliant", year: 2024, target: "Full compliance", context: "Meets all EPA standards.", source: "City Water Dept", sourceUrl: "", confidence: "high", actions: ["Conserve water"] },
-                { name: "energy", level: 0, indicator: "Renewable energy share", value: "40%", year: 2023, target: "100% by 2035", context: "On track for state targets.", source: "Energy Commission", sourceUrl: "", confidence: "medium", actions: ["Switch to green energy plan"] },
-                { name: "social equity", level: 75, indicator: "Gini coefficient", value: "0.48", year: 2022, target: "Below 0.40", context: "Significant income inequality.", source: "Census ACS", sourceUrl: "", confidence: "high", actions: ["Support progressive tax policies"] },
+                { name: "water & sanitation", level: -50, indicator: "Water quality", value: "100% compliant", year: 2024, target: "Full compliance", context: "Meets EPA standards.", source: "City Water Dept", sourceUrl: "", confidence: "high", actions: ["Conserve water"] },
+                { name: "energy", level: 0, indicator: "Renewable share", value: "40%", year: 2023, target: "100% by 2035", context: "On track.", source: "Energy Commission", sourceUrl: "", confidence: "medium", actions: ["Switch to green energy plan"] },
+                { name: "social equity", level: 75, indicator: "Gini coefficient", value: "0.48", year: 2022, target: "Below 0.30 (CA target)", context: "Significant income inequality.", source: "Census ACS", sourceUrl: "", confidence: "high", actions: ["Support progressive tax policies"] },
                 { name: "peace & justice", level: 25, indicator: "Violent crime rate", value: "350/100K", year: 2023, target: "Below 300/100K", context: "Slightly above national average.", source: "FBI UCR", sourceUrl: "", confidence: "medium", actions: ["Support community safety programs"] },
                 { name: "political voice", level: -50, indicator: "Voter turnout", value: "78%", year: 2024, target: "Above 75%", context: "Good civic engagement.", source: "County Elections", sourceUrl: "", confidence: "high", actions: ["Register to vote"] },
-                { name: "gender equality", level: 25, indicator: "Gender pay ratio", value: "82 cents/$1", year: 2023, target: "Pay equity", context: "18% gap persists.", source: "BLS", sourceUrl: "", confidence: "medium", actions: ["Support pay transparency"] },
-                { name: "networks", level: 0, indicator: "Broadband access", value: "94% coverage", year: 2023, target: "Universal access", context: "Gaps remain in rural areas.", source: "FCC", sourceUrl: "", confidence: "medium", actions: ["Support broadband expansion"] }
+                { name: "gender equality", level: 25, indicator: "Gender pay ratio", value: "82 cents/$1", year: 2023, target: "Pay equity (1:1)", context: "18% gap persists.", source: "BLS", sourceUrl: "", confidence: "medium", actions: ["Support pay transparency"] },
+                { name: "networks", level: 0, indicator: "Broadband access", value: "94% coverage", year: 2023, target: "Universal access", context: "Gaps in rural areas.", source: "FCC", sourceUrl: "", confidence: "medium", actions: ["Support broadband expansion"] }
             ],
             ecological: [
-                { name: "climate change", level: 50, indicator: "GHG per capita", value: "8.5 MT CO2e", year: 2022, target: "Below 6 MT by 2030", context: "Transportation is largest source.", source: "City Climate Plan", sourceUrl: "", confidence: "medium", actions: ["Reduce driving", "Electrify your home"] },
+                { name: "climate change", level: 50, indicator: "GHG per capita", value: "8.5 MT CO2e", year: 2022, target: "Below 2.5 MT by 2030", context: "Transportation is largest source.", source: "City Climate Plan", sourceUrl: "", confidence: "medium", actions: ["Reduce driving", "Electrify your home"] },
                 { name: "ocean acidification", level: 50, indicator: "Regional pH", value: "Monitored regionally", year: 2024, target: "Pre-industrial pH", context: "Global issue with local impacts.", source: "NOAA", sourceUrl: "", confidence: "low", actions: ["Reduce carbon footprint"] },
-                { name: "chemical pollution", level: 0, indicator: "Toxic releases", value: "Below reporting threshold", year: 2023, target: "Zero toxic releases", context: "Low industrial activity.", source: "EPA TRI", sourceUrl: "", confidence: "medium", actions: ["Dispose of chemicals properly"] },
-                { name: "nitrogen & phosphorus loading", level: "NaN", indicator: "N in groundwater", value: "Data not available", year: null, target: "Below 10 mg/L", context: "Data gap — needs local monitoring.", source: "", sourceUrl: "", confidence: "low", actions: ["Support water quality monitoring"] },
-                { name: "freshwater withdrawals", level: 25, indicator: "Water use", value: "85 gal/person/day", year: 2023, target: "Below 80 gal/day", context: "Conservation programs in place.", source: "Water Dept", sourceUrl: "", confidence: "medium", actions: ["Conserve water"] },
-                { name: "land conversion", level: -50, indicator: "Protected land", value: "25% of area", year: 2024, target: "30% by 2030", context: "Good park system.", source: "Parks Dept", sourceUrl: "", confidence: "medium", actions: ["Support open space measures"] },
+                { name: "chemical pollution", level: 0, indicator: "Toxic releases", value: "Below threshold", year: 2023, target: "Zero toxic releases", context: "Low industrial activity.", source: "EPA TRI", sourceUrl: "", confidence: "medium", actions: ["Dispose of chemicals properly"] },
+                { name: "nitrogen & phosphorus loading", level: null, indicator: "N in groundwater", value: "Data not available", year: null, target: "Below 10 mg/L", context: "Data gap.", source: "", sourceUrl: "", confidence: "low", actions: ["Support water quality monitoring"] },
+                { name: "freshwater withdrawals", level: 25, indicator: "Water use", value: "85 gal/person/day", year: 2023, target: "Below 80 gal/day", context: "Conservation in place.", source: "Water Dept", sourceUrl: "", confidence: "medium", actions: ["Conserve water"] },
+                { name: "land conversion", level: -50, indicator: "Protected land", value: "25% of area", year: 2024, target: "30% by 2030", context: "Good parks system.", source: "Parks Dept", sourceUrl: "", confidence: "medium", actions: ["Support open space measures"] },
                 { name: "biodiversity loss", level: 0, indicator: "Habitat health", value: "Moderate", year: 2023, target: "No net loss", context: "Some restoration needed.", source: "Regional conservation plan", sourceUrl: "", confidence: "low", actions: ["Remove invasive species"] },
-                { name: "air pollution", level: -50, indicator: "PM2.5", value: "7.2 ug/m3", year: 2023, target: "WHO: 5 ug/m3", context: "Meets EPA standard, exceeds WHO.", source: "EPA AQS", sourceUrl: "", confidence: "high", actions: ["Reduce driving on bad air days"] },
-                { name: "ozone layer depletion", level: -100, indicator: "Stratospheric ozone", value: "Recovering globally", year: 2024, target: "Full recovery ~2066", context: "Montreal Protocol success.", source: "NOAA", sourceUrl: "", confidence: "high", actions: ["Properly dispose of old refrigerants"] }
+                { name: "air pollution", level: -50, indicator: "PM2.5", value: "7.2 ug/m3", year: 2023, target: "WHO: 5 ug/m3", context: "Meets EPA, exceeds WHO.", source: "EPA AQS", sourceUrl: "", confidence: "high", actions: ["Reduce driving on bad air days"] },
+                { name: "ozone layer depletion", level: -100, indicator: "Stratospheric ozone", value: "Recovering", year: 2024, target: "Full recovery ~2066", context: "Montreal Protocol success.", source: "NOAA", sourceUrl: "", confidence: "high", actions: ["Properly dispose of old refrigerants"] }
             ]
         };
 
-        // 4. Add dimensions to the doughnut and load data into the detail panel
+        // Store data for detail panel
+        const dimData = {};
+
+        // 3. Add dimensions to the doughnut
         exampleData.social.forEach(dim => {
             myDonut.addDimension("inner", dim.name, dim.level, "");
-            detail.setData('inner', dim.name, { ...dim, ring: 'social' });
+            dimData['inner:' + dim.name] = { ...dim, ring: 'social' };
         });
         exampleData.ecological.forEach(dim => {
             myDonut.addDimension("outer", dim.name, dim.level, "");
-            detail.setData('outer', dim.name, { ...dim, ring: 'ecological' });
+            dimData['outer:' + dim.name] = { ...dim, ring: 'ecological' };
         });
 
-        // Alternative: load all at once with detail.loadPortrait(exampleData);
+        // 4. Click handler for detail panel
+        function statusLabel(l) {
+            if (l === null || l === undefined || isNaN(l)) return ['Unknown', '#9ca3af', '#f3f4f6'];
+            if (l <= -50) return ['Under control', '#166534', '#dcfce7'];
+            if (l <= 0) return ['On track', '#92400e', '#fef3c7'];
+            if (l <= 50) return ['Needs attention', '#92400e', '#fef3c7'];
+            if (l <= 100) return ['Critical', '#991b1b', '#fee2e2'];
+            return ['Severe', '#fff', '#ef4444'];
+        }
+
+        function showDetail(type, name) {
+            const d = dimData[type + ':' + name];
+            if (!d) return;
+            const panel = document.getElementById('detailPanel');
+            const [label, color, bg] = statusLabel(d.level);
+            const isEco = d.ring === 'ecological';
+
+            let html = `<div class="detail-header">
+                <span class="detail-ring ${isEco ? 'ring-eco' : 'ring-social'}"></span>
+                <h3>${d.name}</h3>
+                <span class="status" style="background:${bg};color:${color}">${label}</span>
+            </div>`;
+
+            if (typeof d.level === 'number' && !isNaN(d.level)) {
+                const pct = Math.min(100, Math.max(0, (d.level + 100) / 2.5));
+                const bc = d.level <= -50 ? '#22c55e' : d.level <= 0 ? '#84cc16' : d.level <= 50 ? '#eab308' : '#ef4444';
+                html += `<div style="background:var(--border);border-radius:4px;height:6px;margin-bottom:0.75rem;overflow:hidden;"><div style="width:${pct}%;height:100%;border-radius:4px;background:${bc};"></div></div>`;
+            }
+
+            html += `<div class="detail-metric">
+                <div class="label">${d.indicator || ''}</div>
+                <div class="value">${d.value || 'Data needed'}</div>
+                ${d.year ? `<div class="year">Year: ${d.year}</div>` : ''}
+                ${d.target ? `<div class="target">Target: ${d.target}</div>` : ''}
+                ${d.context ? `<div class="context">${d.context}</div>` : ''}
+            </div>`;
+
+            if (d.source) {
+                html += `<div class="detail-source"><h4>Source</h4>`;
+                html += d.sourceUrl ? `<a href="${d.sourceUrl}" target="_blank">${d.source}</a>` : d.source;
+                html += `</div>`;
+            }
+
+            if (d.actions && d.actions.length) {
+                html += `<div class="detail-actions"><h4>Get Involved</h4><ul>`;
+                d.actions.forEach(a => html += `<li>${a}</li>`);
+                html += `</ul></div>`;
+            }
+
+            // AI Research button
+            html += AgentUI.renderResearchButton(d.name, d.ring, 'Example City', 'State');
+
+            panel.innerHTML = html;
+        }
+
+        const canvas = document.getElementById('doughnutCanvas');
+        canvas.addEventListener('click', () => {
+            setTimeout(() => {
+                const dim = myDonut.getSelectedDimension();
+                if (dim) showDetail(dim.type, dim.name);
+            }, 50);
+        });
     </script>
 </body>
 </html>
