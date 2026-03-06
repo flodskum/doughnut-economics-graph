@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doughnut Data Portrait Example</title>
+    <style>
+        * { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f8f9fa; }
+        header { background: linear-gradient(135deg, #2d5016, #4a8c1c); color: white; padding: 1.5rem 2rem; }
+        header h1 { font-size: 1.4rem; }
+        header p { opacity: 0.8; font-size: 0.9rem; margin-top: 0.3rem; }
+        .layout { display: grid; grid-template-columns: 1fr 380px; min-height: calc(100vh - 80px); }
+        .doughnut-section { display: flex; flex-direction: column; align-items: center; padding: 2rem; }
+        .hint { color: #b2bec3; font-size: 0.85rem; margin-top: 0.5rem; }
+        #doughnutDiv { max-width: 640px; }
+        .detail-panel { background: white; border-left: 1px solid #dfe6e9; padding: 1.5rem; overflow-y: auto; max-height: calc(100vh - 80px); }
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: 1fr; }
+            .detail-panel { border-left: none; border-top: 1px solid #dfe6e9; max-height: none; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Doughnut Data Portrait</h1>
+        <p>Click any segment to view sourced data, indicators, and actions</p>
+    </header>
+
+    <div class="layout">
+        <div class="doughnut-section">
+            <div id="doughnutDiv">
+                <canvas id="doughnutCanvas">Your browser does not support canvas.</canvas>
+            </div>
+            <div class="hint">Click a dimension to explore its data and sources</div>
+        </div>
+        <div class="detail-panel" id="detailPanel">
+            <p style="color:#999;">Click a dimension to see details.</p>
+        </div>
+    </div>
+
+    <script src="doughnut.js?4.6"></script>
+    <script src="doughnut-detail.js"></script>
+    <script>
+        // 1. Create the doughnut
+        const myDonut = new Doughnut(640, 1.0, 14, "doughnutCanvas", "doughnutDiv", null, null, null, null);
+        myDonut.setColours(2, 1, "#883251", "#E096C6");
+
+        // 2. Attach the detail panel
+        const detail = new DoughnutDetail(myDonut, 'detailPanel');
+
+        // 3. Example data — replace with your own or load from the research agent CLI:
+        //    node tools/cli.js "Your City" "Your State" --output portrait.json
+        const exampleData = {
+            social: [
+                {
+                    name: "food", level: 50,
+                    indicator: "Food insecurity rate",
+                    value: "12% of households food insecure",
+                    year: 2023,
+                    target: "Below 10%",
+                    context: "Above the national average of 10.2%. Food bank usage increased 30% since 2020.",
+                    source: "USDA Economic Research Service",
+                    sourceUrl: "https://www.ers.usda.gov/topics/food-nutrition-assistance/food-security-in-the-u-s/",
+                    confidence: "high",
+                    actions: ["Donate to local food banks", "Support SNAP enrollment outreach", "Advocate for school meal programs"]
+                },
+                { name: "health", level: 0, indicator: "Uninsured rate", value: "5.2%", year: 2023, target: "Universal coverage", context: "Below national average.", source: "Census ACS", sourceUrl: "https://data.census.gov/", confidence: "high", actions: ["Support Medicaid expansion", "Help neighbors enroll in coverage"] },
+                { name: "education", level: -25, indicator: "HS graduation rate", value: "91%", year: 2023, target: "95%+", context: "Near state average.", source: "State Dept of Education", sourceUrl: "", confidence: "medium", actions: ["Volunteer as a tutor"] },
+                { name: "income & work", level: 50, indicator: "Poverty rate", value: "14%", year: 2022, target: "Below 10%", context: "Higher than national average.", source: "Census Bureau", sourceUrl: "https://www.census.gov/quickfacts/", confidence: "high", actions: ["Support living wage campaigns"] },
+                { name: "housing", level: 100, indicator: "Cost-burdened households", value: "45%", year: 2023, target: "Below 30%", context: "Housing costs rising faster than wages.", source: "HUD", sourceUrl: "", confidence: "medium", actions: ["Advocate for affordable housing"] },
+                { name: "water & sanitation", level: -50, indicator: "Water quality compliance", value: "100% compliant", year: 2024, target: "Full compliance", context: "Meets all EPA standards.", source: "City Water Dept", sourceUrl: "", confidence: "high", actions: ["Conserve water"] },
+                { name: "energy", level: 0, indicator: "Renewable energy share", value: "40%", year: 2023, target: "100% by 2035", context: "On track for state targets.", source: "Energy Commission", sourceUrl: "", confidence: "medium", actions: ["Switch to green energy plan"] },
+                { name: "social equity", level: 75, indicator: "Gini coefficient", value: "0.48", year: 2022, target: "Below 0.40", context: "Significant income inequality.", source: "Census ACS", sourceUrl: "", confidence: "high", actions: ["Support progressive tax policies"] },
+                { name: "peace & justice", level: 25, indicator: "Violent crime rate", value: "350/100K", year: 2023, target: "Below 300/100K", context: "Slightly above national average.", source: "FBI UCR", sourceUrl: "", confidence: "medium", actions: ["Support community safety programs"] },
+                { name: "political voice", level: -50, indicator: "Voter turnout", value: "78%", year: 2024, target: "Above 75%", context: "Good civic engagement.", source: "County Elections", sourceUrl: "", confidence: "high", actions: ["Register to vote"] },
+                { name: "gender equality", level: 25, indicator: "Gender pay ratio", value: "82 cents/$1", year: 2023, target: "Pay equity", context: "18% gap persists.", source: "BLS", sourceUrl: "", confidence: "medium", actions: ["Support pay transparency"] },
+                { name: "networks", level: 0, indicator: "Broadband access", value: "94% coverage", year: 2023, target: "Universal access", context: "Gaps remain in rural areas.", source: "FCC", sourceUrl: "", confidence: "medium", actions: ["Support broadband expansion"] }
+            ],
+            ecological: [
+                { name: "climate change", level: 50, indicator: "GHG per capita", value: "8.5 MT CO2e", year: 2022, target: "Below 6 MT by 2030", context: "Transportation is largest source.", source: "City Climate Plan", sourceUrl: "", confidence: "medium", actions: ["Reduce driving", "Electrify your home"] },
+                { name: "ocean acidification", level: 50, indicator: "Regional pH", value: "Monitored regionally", year: 2024, target: "Pre-industrial pH", context: "Global issue with local impacts.", source: "NOAA", sourceUrl: "", confidence: "low", actions: ["Reduce carbon footprint"] },
+                { name: "chemical pollution", level: 0, indicator: "Toxic releases", value: "Below reporting threshold", year: 2023, target: "Zero toxic releases", context: "Low industrial activity.", source: "EPA TRI", sourceUrl: "", confidence: "medium", actions: ["Dispose of chemicals properly"] },
+                { name: "nitrogen & phosphorus loading", level: "NaN", indicator: "N in groundwater", value: "Data not available", year: null, target: "Below 10 mg/L", context: "Data gap — needs local monitoring.", source: "", sourceUrl: "", confidence: "low", actions: ["Support water quality monitoring"] },
+                { name: "freshwater withdrawals", level: 25, indicator: "Water use", value: "85 gal/person/day", year: 2023, target: "Below 80 gal/day", context: "Conservation programs in place.", source: "Water Dept", sourceUrl: "", confidence: "medium", actions: ["Conserve water"] },
+                { name: "land conversion", level: -50, indicator: "Protected land", value: "25% of area", year: 2024, target: "30% by 2030", context: "Good park system.", source: "Parks Dept", sourceUrl: "", confidence: "medium", actions: ["Support open space measures"] },
+                { name: "biodiversity loss", level: 0, indicator: "Habitat health", value: "Moderate", year: 2023, target: "No net loss", context: "Some restoration needed.", source: "Regional conservation plan", sourceUrl: "", confidence: "low", actions: ["Remove invasive species"] },
+                { name: "air pollution", level: -50, indicator: "PM2.5", value: "7.2 ug/m3", year: 2023, target: "WHO: 5 ug/m3", context: "Meets EPA standard, exceeds WHO.", source: "EPA AQS", sourceUrl: "", confidence: "high", actions: ["Reduce driving on bad air days"] },
+                { name: "ozone layer depletion", level: -100, indicator: "Stratospheric ozone", value: "Recovering globally", year: 2024, target: "Full recovery ~2066", context: "Montreal Protocol success.", source: "NOAA", sourceUrl: "", confidence: "high", actions: ["Properly dispose of old refrigerants"] }
+            ]
+        };
+
+        // 4. Add dimensions to the doughnut and load data into the detail panel
+        exampleData.social.forEach(dim => {
+            myDonut.addDimension("inner", dim.name, dim.level, "");
+            detail.setData('inner', dim.name, { ...dim, ring: 'social' });
+        });
+        exampleData.ecological.forEach(dim => {
+            myDonut.addDimension("outer", dim.name, dim.level, "");
+            detail.setData('outer', dim.name, { ...dim, ring: 'ecological' });
+        });
+
+        // Alternative: load all at once with detail.loadPortrait(exampleData);
+    </script>
+</body>
+</html>
