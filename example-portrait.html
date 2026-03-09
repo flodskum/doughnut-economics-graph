@@ -27,10 +27,11 @@
             text-decoration: none;
         }
         .header-btn:hover { border-color: white; background: rgba(255,255,255,0.08); color: white; }
-        .layout { display: grid; grid-template-columns: 1fr 400px; min-height: calc(100vh - 64px); }
-        .doughnut-section { display: flex; flex-direction: column; align-items: center; padding: 2rem; }
-        .hint { color: var(--faint); font-size: 0.8rem; margin-top: 0.75rem; }
-        #doughnutDiv { max-width: 640px; width: 100%; }
+        .layout { display: grid; grid-template-columns: 1fr 380px; min-height: calc(100vh - 64px); }
+        .doughnut-section { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 1rem; }
+        .hint { color: var(--faint); font-size: 0.75rem; margin-top: 0.5rem; }
+        #doughnutDiv { width: 100%; display: flex; justify-content: center; flex: 1 1 auto; min-height: 0; }
+        #doughnutCanvas { display: block; max-width: 100%; max-height: 100%; }
         .detail-panel {
             background: var(--card); border-left: 1px solid var(--border);
             padding: 1.5rem; overflow-y: auto; max-height: calc(100vh - 64px);
@@ -65,17 +66,7 @@
         .agent-result-actions li::before { content: "\2192 "; color: var(--accent); }
         .agent-result-model { font-size: 0.7rem; color: var(--faint); margin-top: 0.5rem; text-align: right; }
         .agent-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; border-radius: 0.5rem; padding: 0.6rem 0.8rem; font-size: 0.82rem; }
-        .agent-modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
-        .agent-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--card); border: 1px solid var(--border); border-radius: 1rem; padding: 1.75rem; width: 420px; max-width: 92vw; z-index: 1000; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
-        .agent-modal h3 { font-size: 1.1rem; margin-bottom: 0.3rem; }
-        .agent-modal-desc { font-size: 0.82rem; color: var(--muted); margin-bottom: 1rem; }
-        .agent-modal label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.75rem; }
-        .agent-modal input { display: block; width: 100%; margin-top: 0.25rem; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--metric-bg); color: var(--text); font-size: 0.85rem; }
-        .agent-modal input:focus { outline: none; border-color: var(--accent); }
-        .agent-modal-presets { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
-        .agent-preset { padding: 0.25rem 0.65rem; border-radius: 1rem; font-size: 0.72rem; font-weight: 600; background: var(--metric-bg); border: 1px solid var(--border); color: var(--muted); cursor: pointer; }
-        .agent-preset:hover { border-color: var(--accent); color: var(--accent); }
-        .agent-modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+        /* Settings modal is built dynamically by agent-ui.js (no CSS needed) */
 
         /* Detail panel styling */
         .detail-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; }
@@ -126,8 +117,16 @@
     <script src="doughnut.js?4.6"></script>
     <script src="agent-ui.js"></script>
     <script>
-        // 1. Create the doughnut
-        const myDonut = new Doughnut(640, 1.0, 14, "doughnutCanvas", "doughnutDiv", null, null, null, null);
+        // 1. Create the doughnut (responsive sizing)
+        function getDoughnutSize() {
+            const container = document.getElementById('doughnutDiv');
+            const availW = container.clientWidth;
+            const availH = window.innerHeight - 180;
+            return Math.max(320, Math.min(availW, availH, 800));
+        }
+        const size = getDoughnutSize();
+        const textSize = Math.max(10, Math.round(14 * (size / 640)));
+        const myDonut = new Doughnut(size, 1.0, textSize, "doughnutCanvas", "doughnutDiv", null, null, null, null);
         myDonut.setColours(2, 1, "#883251", "#E096C6");
 
         // 2. Example data — replace with your city data or load from the research agent:
