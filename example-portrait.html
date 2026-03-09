@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doughnut Economics — City Portrait Example</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fc; --card: #fff; --text: #111827; --muted: #6b7280;
+            --faint: #9ca3af; --border: #e5e7eb; --accent: #059669;
+            --metric-bg: #f9fafb; --radius: 12px;
+        }
+        * { font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+        header {
+            background: linear-gradient(135deg, #064e3b, #059669);
+            color: white; padding: 1rem 2rem;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+        }
+        header h1 { font-size: 1.15rem; font-weight: 700; }
+        header p { opacity: 0.65; font-size: 0.78rem; }
+        .header-btns { display: flex; gap: 6px; align-items: center; }
+        .header-btn {
+            padding: 0.4rem 0.8rem; border: none; border-radius: 8px;
+            background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9);
+            cursor: pointer; font-size: 0.78rem; font-weight: 500; transition: all 0.2s;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .header-btn:hover { background: rgba(255,255,255,0.2); color: white; }
+
+        .layout { display: grid; grid-template-columns: 1fr 380px; min-height: calc(100vh - 56px); }
+        .doughnut-section {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: flex-start; padding: 1rem; overflow: hidden;
+        }
+        .city-info { text-align: center; margin-bottom: 0.5rem; }
+        .city-info h2 { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+        .city-info .pop { color: var(--muted); font-size: 0.78rem; }
+        .city-info .desc { color: var(--faint); font-size: 0.75rem; max-width: 480px; margin: 0.1rem auto 0; }
+
+        .hint { color: var(--faint); font-size: 0.72rem; margin-top: 0.25rem; flex-shrink: 0; }
+        #doughnutDiv { width: 100%; display: flex; justify-content: center; flex: 1 1 auto; min-height: 0; }
+        #doughnutCanvas { display: block; max-width: 100%; max-height: 100%; cursor: crosshair; }
+
+        .summary-strip {
+            display: flex; gap: 0.4rem; margin-top: 0.35rem; flex-wrap: wrap; justify-content: center; flex-shrink: 0;
+        }
+        .summary-chip { padding: 0.25rem 0.65rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; }
+        .chip-good { background: #dcfce7; color: #166534; }
+        .chip-caution { background: #fef9c3; color: #854d0e; }
+        .chip-bad { background: #fee2e2; color: #991b1b; }
+        .chip-unknown { background: var(--metric-bg); color: var(--faint); border: 1px solid var(--border); }
+
+        .nav-links { display: flex; gap: 0.4rem; margin-top: 0.35rem; flex-wrap: wrap; justify-content: center; flex-shrink: 0; }
+        .nav-link {
+            padding: 0.35rem 0.85rem; background: var(--card); color: var(--muted);
+            border: 1px solid var(--border); border-radius: 8px; font-size: 0.75rem;
+            font-weight: 500; text-decoration: none; transition: all 0.2s;
+        }
+        .nav-link:hover { color: var(--accent); border-color: var(--accent); }
+
+        /* Detail panel */
+        .detail-panel {
+            background: var(--card); border-left: 1px solid var(--border);
+            padding: 1.25rem; overflow-y: auto; max-height: calc(100vh - 56px);
+            position: sticky; top: 0;
+        }
+        .detail-empty { color: var(--faint); font-size: 0.85rem; padding: 2rem; text-align: center; }
+        .detail-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+        .detail-ring { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .ring-eco { background: #ef4444; }
+        .ring-social { background: #22c55e; }
+        .detail-header h3 { font-size: 1rem; font-weight: 700; text-transform: capitalize; }
+        .status { padding: 0.15rem 0.5rem; border-radius: 6px; font-size: 0.68rem; font-weight: 700; margin-left: auto; text-transform: uppercase; }
+        .detail-metric {
+            background: var(--metric-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1rem; margin-bottom: 0.75rem;
+        }
+        .detail-metric .label { font-size: 0.68rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+        .detail-metric .value { font-size: 1.25rem; font-weight: 800; margin-top: 0.1rem; }
+        .detail-metric .year { font-size: 0.72rem; color: var(--faint); }
+        .detail-metric .target { font-size: 0.8rem; color: #7c3aed; margin-top: 0.25rem; }
+        .detail-metric .context { font-size: 0.8rem; color: var(--muted); margin-top: 0.35rem; line-height: 1.5; }
+        .detail-source h4 { font-size: 0.68rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 0.3rem; }
+        .detail-source a { color: #3b82f6; text-decoration: none; font-size: 0.82rem; font-weight: 500; }
+        .detail-source a:hover { text-decoration: underline; }
+        .detail-actions { margin-top: 0.75rem; }
+        .detail-actions h4 { font-size: 0.68rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; margin-bottom: 0.3rem; }
+        .detail-actions ul { list-style: none; }
+        .detail-actions li { padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; color: var(--muted); line-height: 1.45; }
+        .detail-actions li::before { content: "\2192 "; color: var(--accent); font-weight: bold; }
+
+        /* Agent button styles */
+        .agent-research-section { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); display: flex; gap: 0.35rem; flex-wrap: wrap; }
+        .agent-btn { border: none; border-radius: 8px; padding: 0.4rem 0.85rem; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 0.25rem; }
+        .agent-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .agent-btn-research { background: var(--accent); color: white; }
+        .agent-btn-research:hover:not(:disabled) { filter: brightness(1.1); }
+        .agent-btn-settings { background: var(--metric-bg); color: var(--muted); border: 1px solid var(--border); padding: 0.4rem 0.6rem; }
+        .agent-btn-settings:hover { color: var(--accent); border-color: var(--accent); }
+        .agent-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .agent-research-result { width: 100%; margin-top: 0.4rem; }
+        .agent-result-card { background: var(--metric-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem; }
+        .agent-result-header { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); font-weight: 700; margin-bottom: 0.4rem; }
+        .agent-result-field { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.25rem; line-height: 1.45; }
+        .agent-result-field a { color: #3b82f6; text-decoration: none; }
+        .agent-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.8rem; }
+
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: 1fr; }
+            .detail-panel { border-left: none; border-top: 1px solid var(--border); max-height: none; position: relative; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>Doughnut Economics City Portrait</h1>
+            <p>Social foundations & ecological ceilings — click any segment</p>
+        </div>
+        <div class="header-btns">
+            <a href="data-gaps.html" class="header-btn">Data Gaps</a>
+            <a href="outreach-template.html" class="header-btn">Outreach</a>
+            <button class="header-btn" onclick="AgentUI.showSettings()">&#9881; AI Settings</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <div class="doughnut-section">
+            <div class="city-info">
+                <h2 id="cityName"></h2>
+                <div class="pop" id="cityPop"></div>
+                <div class="desc" id="cityDesc"></div>
+            </div>
+            <div id="doughnutDiv">
+                <canvas id="doughnutCanvas">Your browser does not support canvas.</canvas>
+            </div>
+            <div class="hint">Click a dimension to explore data, sources, and actions</div>
+            <div class="summary-strip" id="summaryStrip"></div>
+            <div class="nav-links">
+                <a href="data-gaps.html" class="nav-link">Data Gap Analysis</a>
+                <a href="outreach-template.html" class="nav-link">Outreach Directory</a>
+            </div>
+        </div>
+        <div class="detail-panel" id="detailPanel">
+            <div class="detail-empty" id="detailEmpty">Select a dimension on the doughnut to explore data, primary sources, and ways to take action.</div>
+        </div>
+    </div>
+
+    <script src="doughnut.js?4.6"></script>
+    <script src="example-data.js"></script>
+    <script src="agent-ui.js"></script>
+    <script>
+        // Load the first (or only) jurisdiction from the data file
+        const jurisdictionKey = Object.keys(JURISDICTIONS)[0];
+        const cityData = JURISDICTIONS[jurisdictionKey];
+
+        // Header info
+        document.getElementById('cityName').textContent = cityData.name;
+        document.getElementById('cityPop').textContent = 'Population: ' + cityData.population;
+        document.getElementById('cityDesc').textContent = cityData.description;
+
+        // Responsive doughnut sizing
+        function getDoughnutSize() {
+            const container = document.getElementById('doughnutDiv');
+            const availW = container.clientWidth;
+            const availH = window.innerHeight - 210;
+            return Math.max(320, Math.min(availW, availH, 800));
+        }
+
+        const size = getDoughnutSize();
+        const textSize = Math.max(10, Math.round(14 * (size / 640)));
+        const myDonut = new Doughnut(size, 1.0, textSize, "doughnutCanvas", "doughnutDiv", null, null, null, null);
+        myDonut.setColours(2, 1, "#883251", "#E096C6");
+
+        // Build dimension lookup and add to doughnut
+        const dimData = {};
+
+        cityData.social.forEach(dim => {
+            myDonut.addDimension("inner", dim.name, dim.level, "");
+            dimData['inner:' + dim.name] = { ...dim, ring: 'social' };
+        });
+        cityData.ecological.forEach(dim => {
+            myDonut.addDimension("outer", dim.name, dim.level, "");
+            dimData['outer:' + dim.name] = { ...dim, ring: 'ecological' };
+        });
+
+        // Summary strip
+        const all = [...cityData.social, ...cityData.ecological];
+        let good = 0, caution = 0, bad = 0, unknown = 0;
+        all.forEach(d => {
+            const l = d.level;
+            if (typeof l !== 'number' || isNaN(l)) unknown++;
+            else if (l <= 0) good++;
+            else if (l <= 50) caution++;
+            else bad++;
+        });
+        document.getElementById('summaryStrip').innerHTML =
+            `<span class="summary-chip chip-good">${good} thriving</span>` +
+            `<span class="summary-chip chip-caution">${caution} needs attention</span>` +
+            `<span class="summary-chip chip-bad">${bad} critical</span>` +
+            (unknown ? `<span class="summary-chip chip-unknown">${unknown} unknown</span>` : '');
+
+        // Detail panel
+        function statusLabel(l) {
+            if (l === null || l === undefined || isNaN(l)) return ['Unknown', '#9ca3af', '#f3f4f6'];
+            if (l <= -50) return ['Under control', '#166534', '#dcfce7'];
+            if (l <= 0) return ['On track', '#854d0e', '#fef9c3'];
+            if (l <= 50) return ['Needs attention', '#854d0e', '#fef9c3'];
+            if (l <= 100) return ['Critical', '#991b1b', '#fee2e2'];
+            return ['Severe', '#fff', '#ef4444'];
+        }
+
+        function showDetail(type, name) {
+            const d = dimData[type + ':' + name];
+            if (!d) return;
+            const panel = document.getElementById('detailPanel');
+            const [label, color, bg] = statusLabel(d.level);
+            const isEco = d.ring === 'ecological';
+            const cityName = cityData.name.replace(/^City of /, '');
+
+            let html = `<div class="detail-header">
+                <span class="detail-ring ${isEco ? 'ring-eco' : 'ring-social'}"></span>
+                <h3>${d.name}</h3>
+                <span class="status" style="background:${bg};color:${color}">${label}</span>
+            </div>`;
+
+            if (typeof d.level === 'number' && !isNaN(d.level)) {
+                const pct = Math.min(100, Math.max(0, (d.level + 100) / 2.5));
+                const bc = d.level <= -50 ? '#22c55e' : d.level <= 0 ? '#84cc16' : d.level <= 50 ? '#eab308' : '#ef4444';
+                html += `<div style="background:var(--border);border-radius:4px;height:6px;margin-bottom:0.75rem;overflow:hidden;"><div style="width:${pct}%;height:100%;border-radius:4px;background:${bc};"></div></div>`;
+            }
+
+            html += `<div class="detail-metric">
+                <div class="label">${d.indicator || ''}</div>
+                <div class="value">${d.value || 'Data needed'}</div>
+                ${d.year ? `<div class="year">Year: ${d.year}</div>` : ''}
+                ${d.target ? `<div class="target">Target: ${d.target}</div>` : ''}
+                ${d.context ? `<div class="context">${d.context}</div>` : ''}
+            </div>`;
+
+            if (d.source) {
+                html += `<div class="detail-source"><h4>Source</h4>`;
+                html += d.sourceUrl ? `<a href="${d.sourceUrl}" target="_blank" rel="noopener">${d.source}</a>` : `<span style="font-size:0.82rem;color:var(--muted)">${d.source}</span>`;
+                html += `</div>`;
+            }
+
+            if (d.actions && d.actions.length) {
+                html += `<div class="detail-actions"><h4>Get Involved</h4><ul>`;
+                d.actions.forEach(a => html += `<li>${a}</li>`);
+                html += `</ul></div>`;
+            }
+
+            // AI Research button
+            html += AgentUI.renderResearchButton(d.name, d.ring, cityName, 'California');
+
+            panel.innerHTML = html;
+            document.getElementById('detailEmpty')?.remove();
+        }
+
+        // Click handler
+        document.getElementById('doughnutCanvas').addEventListener('click', () => {
+            setTimeout(() => {
+                const dim = myDonut.getSelectedDimension();
+                if (dim) showDetail(dim.type, dim.name);
+            }, 50);
+        });
+
+        // Resize handler
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => location.reload(), 300);
+        });
+    </script>
+</body>
+</html>

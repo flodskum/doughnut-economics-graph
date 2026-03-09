@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doughnut Data Gap Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <style>
+        :root {
+            --bg: #f5f6f8; --card: #fff; --text: #1a1d21; --muted: #6b7280;
+            --border: #e5e7eb; --accent: #3d8b37;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 2rem; }
+        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--muted); margin-bottom: 2rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; }
+        .card h3 { font-size: 0.95rem; margin-bottom: 0.75rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        th { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 2px solid var(--border); color: var(--muted); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.04em; }
+        td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--border); }
+        .chip { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 600; }
+        .chip-complete { background: #dcfce7; color: #166534; }
+        .chip-partial { background: #fef3c7; color: #92400e; }
+        .chip-missing { background: #fee2e2; color: #991b1b; }
+        .back { display: inline-block; margin-bottom: 1rem; color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+        .back:hover { text-decoration: underline; }
+        .chart-container { height: 250px; }
+    </style>
+</head>
+<body>
+    <a href="example-portrait.html" class="back">&larr; Back to doughnut</a>
+    <h1>Data Gap Analysis</h1>
+    <p class="subtitle">Identifies missing data, low-confidence sources, and priority research areas across all dimensions.</p>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Completeness Overview</h3>
+            <div class="chart-container"><canvas id="completenessChart"></canvas></div>
+        </div>
+        <div class="card">
+            <h3>Confidence Distribution</h3>
+            <div class="chart-container"><canvas id="confidenceChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom:2rem;">
+        <h3>Dimension Inventory</h3>
+        <table id="gapTable">
+            <thead>
+                <tr><th>Dimension</th><th>Ring</th><th>Status</th><th>Indicator</th><th>Year</th><th>Source</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h3>Priority Research Areas</h3>
+        <p id="priorities" style="font-size:0.85rem;color:var(--muted);line-height:1.6;"></p>
+    </div>
+
+    <script>
+    // This page analyzes any portrait data passed via window.PORTRAIT_DATA or loaded from a script
+    // For standalone use, include your data.js before this script
+
+    function analyzeData(data) {
+        const dims = [];
+        const addDims = (arr, ring) => {
+            (arr || []).forEach(d => {
+                const hasValue = d.value && d.value !== 'Data needed' && d.value !== 'Not yet researched';
+                const hasSource = !!d.source && !!d.sourceUrl;
+                const status = !hasValue ? 'missing' : (!hasSource ? 'partial' : 'complete');
+                dims.push({ ...d, ring, status });
+            });
+        };
+        addDims(data.social, 'social');
+        addDims(data.ecological, 'ecological');
+        return dims;
+    }
+
+    function renderAnalysis(dims) {
+        // Table
+        const tbody = document.querySelector('#gapTable tbody');
+        dims.forEach(d => {
+            const chipClass = d.status === 'complete' ? 'chip-complete' : d.status === 'partial' ? 'chip-partial' : 'chip-missing';
+            tbody.innerHTML += `<tr>
+                <td><strong>${d.name}</strong></td>
+                <td>${d.ring}</td>
+                <td><span class="chip ${chipClass}">${d.status}</span></td>
+                <td>${d.indicator || '—'}</td>
+                <td>${d.year || '—'}</td>
+                <td>${d.source ? d.source.substring(0, 40) + (d.source.length > 40 ? '...' : '') : '—'}</td>
+            </tr>`;
+        });
+
+        // Charts
+        const complete = dims.filter(d => d.status === 'complete').length;
+        const partial = dims.filter(d => d.status === 'partial').length;
+        const missing = dims.filter(d => d.status === 'missing').length;
+
+        new Chart(document.getElementById('completenessChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Complete', 'Partial', 'Missing'],
+                datasets: [{ data: [complete, partial, missing], backgroundColor: ['#22c55e', '#eab308', '#ef4444'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        const high = dims.filter(d => d.confidence === 'high').length;
+        const med = dims.filter(d => d.confidence === 'medium').length;
+        const low = dims.filter(d => d.confidence === 'low').length;
+
+        new Chart(document.getElementById('confidenceChart'), {
+            type: 'bar',
+            data: {
+                labels: ['High', 'Medium', 'Low'],
+                datasets: [{ label: 'Dimensions', data: [high, med, low], backgroundColor: ['#22c55e', '#eab308', '#ef4444'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        // Priorities
+        const priorities = dims
+            .filter(d => d.status !== 'complete' || d.confidence === 'low')
+            .map(d => `<strong>${d.name}</strong> (${d.ring}): ${d.status === 'missing' ? 'No data' : d.confidence === 'low' ? 'Low confidence' : 'Missing source URL'}`)
+            .join('<br>');
+        document.getElementById('priorities').innerHTML = priorities || 'All dimensions have complete, sourced data!';
+    }
+
+    // Auto-load if JURISDICTIONS is available (from data.js)
+    if (typeof JURISDICTIONS !== 'undefined') {
+        const first = Object.values(JURISDICTIONS)[0];
+        renderAnalysis(analyzeData(first));
+    }
+    </script>
+</body>
+</html>

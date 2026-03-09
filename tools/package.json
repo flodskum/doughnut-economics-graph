@@ -1,0 +1,17 @@
+{
+  "name": "doughnut-research-agent",
+  "version": "0.1.0",
+  "description": "AI-powered research agent for populating Doughnut Economics city portraits with sourced data",
+  "main": "research-agent.js",
+  "bin": {
+    "doughnut-research": "./cli.js"
+  },
+  "scripts": {
+    "research": "node cli.js"
+  },
+  "keywords": ["doughnut-economics", "city-portrait", "research", "ai", "open-data"],
+  "license": "MIT",
+  "dependencies": {
+    "openai": "^4.0.0"
+  }
+}
