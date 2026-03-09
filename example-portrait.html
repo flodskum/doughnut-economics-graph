@@ -3,97 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doughnut Data Portrait Example</title>
+    <title>Doughnut Economics — City Portrait Example</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #f5f6f8; --card: #fff; --text: #1a1d21; --muted: #6b7280;
-            --faint: #9ca3af; --border: #e5e7eb; --accent: #3d8b37;
-            --metric-bg: #f9fafb; --shadow: 0 1px 3px rgba(0,0,0,0.08);
+            --bg: #f8f9fc; --card: #fff; --text: #111827; --muted: #6b7280;
+            --faint: #9ca3af; --border: #e5e7eb; --accent: #059669;
+            --metric-bg: #f9fafb; --radius: 12px;
         }
-        * { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); color: var(--text); }
+        * { font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+
         header {
-            background: linear-gradient(135deg, #1a2f0e, #3d8b37);
-            color: white; padding: 1.25rem 2rem;
+            background: linear-gradient(135deg, #064e3b, #059669);
+            color: white; padding: 1rem 2rem;
             display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
         }
-        header h1 { font-size: 1.35rem; font-weight: 700; }
-        header p { opacity: 0.7; font-size: 0.82rem; }
-        .header-btns { display: flex; gap: 0.4rem; }
+        header h1 { font-size: 1.15rem; font-weight: 700; }
+        header p { opacity: 0.65; font-size: 0.78rem; }
+        .header-btns { display: flex; gap: 6px; align-items: center; }
         .header-btn {
-            padding: 0.4rem 0.8rem; border: 1.5px solid rgba(255,255,255,0.3);
-            border-radius: 2rem; background: transparent; color: rgba(255,255,255,0.85);
+            padding: 0.4rem 0.8rem; border: none; border-radius: 8px;
+            background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9);
             cursor: pointer; font-size: 0.78rem; font-weight: 500; transition: all 0.2s;
-            text-decoration: none;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
         }
-        .header-btn:hover { border-color: white; background: rgba(255,255,255,0.08); color: white; }
-        .layout { display: grid; grid-template-columns: 1fr 380px; min-height: calc(100vh - 64px); }
-        .doughnut-section { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 1rem; }
-        .hint { color: var(--faint); font-size: 0.75rem; margin-top: 0.5rem; }
+        .header-btn:hover { background: rgba(255,255,255,0.2); color: white; }
+
+        .layout { display: grid; grid-template-columns: 1fr 380px; min-height: calc(100vh - 56px); }
+        .doughnut-section {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: flex-start; padding: 1rem; overflow: hidden;
+        }
+        .city-info { text-align: center; margin-bottom: 0.5rem; }
+        .city-info h2 { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+        .city-info .pop { color: var(--muted); font-size: 0.78rem; }
+        .city-info .desc { color: var(--faint); font-size: 0.75rem; max-width: 480px; margin: 0.1rem auto 0; }
+
+        .hint { color: var(--faint); font-size: 0.72rem; margin-top: 0.25rem; flex-shrink: 0; }
         #doughnutDiv { width: 100%; display: flex; justify-content: center; flex: 1 1 auto; min-height: 0; }
-        #doughnutCanvas { display: block; max-width: 100%; max-height: 100%; }
+        #doughnutCanvas { display: block; max-width: 100%; max-height: 100%; cursor: crosshair; }
+
+        .summary-strip {
+            display: flex; gap: 0.4rem; margin-top: 0.35rem; flex-wrap: wrap; justify-content: center; flex-shrink: 0;
+        }
+        .summary-chip { padding: 0.25rem 0.65rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; }
+        .chip-good { background: #dcfce7; color: #166534; }
+        .chip-caution { background: #fef9c3; color: #854d0e; }
+        .chip-bad { background: #fee2e2; color: #991b1b; }
+        .chip-unknown { background: var(--metric-bg); color: var(--faint); border: 1px solid var(--border); }
+
+        .nav-links { display: flex; gap: 0.4rem; margin-top: 0.35rem; flex-wrap: wrap; justify-content: center; flex-shrink: 0; }
+        .nav-link {
+            padding: 0.35rem 0.85rem; background: var(--card); color: var(--muted);
+            border: 1px solid var(--border); border-radius: 8px; font-size: 0.75rem;
+            font-weight: 500; text-decoration: none; transition: all 0.2s;
+        }
+        .nav-link:hover { color: var(--accent); border-color: var(--accent); }
+
+        /* Detail panel */
         .detail-panel {
             background: var(--card); border-left: 1px solid var(--border);
-            padding: 1.5rem; overflow-y: auto; max-height: calc(100vh - 64px);
+            padding: 1.25rem; overflow-y: auto; max-height: calc(100vh - 56px);
             position: sticky; top: 0;
         }
-        .detail-panel p { color: var(--faint); }
+        .detail-empty { color: var(--faint); font-size: 0.85rem; padding: 2rem; text-align: center; }
+        .detail-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+        .detail-ring { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .ring-eco { background: #ef4444; }
+        .ring-social { background: #22c55e; }
+        .detail-header h3 { font-size: 1rem; font-weight: 700; text-transform: capitalize; }
+        .status { padding: 0.15rem 0.5rem; border-radius: 6px; font-size: 0.68rem; font-weight: 700; margin-left: auto; text-transform: uppercase; }
+        .detail-metric {
+            background: var(--metric-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1rem; margin-bottom: 0.75rem;
+        }
+        .detail-metric .label { font-size: 0.68rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+        .detail-metric .value { font-size: 1.25rem; font-weight: 800; margin-top: 0.1rem; }
+        .detail-metric .year { font-size: 0.72rem; color: var(--faint); }
+        .detail-metric .target { font-size: 0.8rem; color: #7c3aed; margin-top: 0.25rem; }
+        .detail-metric .context { font-size: 0.8rem; color: var(--muted); margin-top: 0.35rem; line-height: 1.5; }
+        .detail-source h4 { font-size: 0.68rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 0.3rem; }
+        .detail-source a { color: #3b82f6; text-decoration: none; font-size: 0.82rem; font-weight: 500; }
+        .detail-source a:hover { text-decoration: underline; }
+        .detail-actions { margin-top: 0.75rem; }
+        .detail-actions h4 { font-size: 0.68rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; margin-bottom: 0.3rem; }
+        .detail-actions ul { list-style: none; }
+        .detail-actions li { padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; color: var(--muted); line-height: 1.45; }
+        .detail-actions li::before { content: "\2192 "; color: var(--accent); font-weight: bold; }
+
+        /* Agent button styles */
+        .agent-research-section { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); display: flex; gap: 0.35rem; flex-wrap: wrap; }
+        .agent-btn { border: none; border-radius: 8px; padding: 0.4rem 0.85rem; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 0.25rem; }
+        .agent-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .agent-btn-research { background: var(--accent); color: white; }
+        .agent-btn-research:hover:not(:disabled) { filter: brightness(1.1); }
+        .agent-btn-settings { background: var(--metric-bg); color: var(--muted); border: 1px solid var(--border); padding: 0.4rem 0.6rem; }
+        .agent-btn-settings:hover { color: var(--accent); border-color: var(--accent); }
+        .agent-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .agent-research-result { width: 100%; margin-top: 0.4rem; }
+        .agent-result-card { background: var(--metric-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem; }
+        .agent-result-header { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); font-weight: 700; margin-bottom: 0.4rem; }
+        .agent-result-field { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.25rem; line-height: 1.45; }
+        .agent-result-field a { color: #3b82f6; text-decoration: none; }
+        .agent-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.8rem; }
+
         @media (max-width: 900px) {
             .layout { grid-template-columns: 1fr; }
             .detail-panel { border-left: none; border-top: 1px solid var(--border); max-height: none; position: relative; }
         }
-
-        /* Agent UI inline styles */
-        .agent-research-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; gap: 0.4rem; align-items: flex-start; flex-wrap: wrap; }
-        .agent-btn { border: none; border-radius: 2rem; padding: 0.45rem 1rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
-        .agent-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .agent-btn-research { background: var(--accent); color: white; }
-        .agent-btn-research:hover:not(:disabled) { filter: brightness(1.1); }
-        .agent-btn-settings { background: var(--metric-bg); color: var(--muted); border: 1px solid var(--border); padding: 0.45rem 0.65rem; font-size: 0.9rem; }
-        .agent-btn-settings:hover { color: var(--accent); border-color: var(--accent); }
-        .agent-btn-primary { background: var(--accent); color: white; }
-        .agent-btn-secondary { background: var(--metric-bg); color: var(--muted); border: 1px solid var(--border); }
-        .agent-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .agent-research-result { width: 100%; margin-top: 0.5rem; }
-        .agent-result-card { background: var(--metric-bg); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1rem; }
-        .agent-result-header { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem; }
-        .agent-result-field { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.3rem; line-height: 1.45; }
-        .agent-result-label { display: inline-block; min-width: 70px; font-size: 0.7rem; text-transform: uppercase; color: var(--faint); font-weight: 600; }
-        .agent-result-field a { color: #3b82f6; text-decoration: none; }
-        .agent-result-actions { list-style: none; padding: 0; margin: 0.2rem 0 0 70px; }
-        .agent-result-actions li { font-size: 0.8rem; padding: 0.15rem 0; }
-        .agent-result-actions li::before { content: "\2192 "; color: var(--accent); }
-        .agent-result-model { font-size: 0.7rem; color: var(--faint); margin-top: 0.5rem; text-align: right; }
-        .agent-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; border-radius: 0.5rem; padding: 0.6rem 0.8rem; font-size: 0.82rem; }
-        /* Settings modal is built dynamically by agent-ui.js (no CSS needed) */
-
-        /* Detail panel styling */
-        .detail-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; }
-        .detail-ring { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-        .ring-eco { background: #ef4444; }
-        .ring-social { background: #22c55e; }
-        .detail-header h3 { font-size: 1.05rem; font-weight: 700; text-transform: capitalize; }
-        .status { padding: 0.2rem 0.55rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 700; margin-left: auto; text-transform: uppercase; }
-        .detail-metric { background: var(--metric-bg); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1rem; margin-bottom: 0.75rem; }
-        .detail-metric .label { font-size: 0.7rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
-        .detail-metric .value { font-size: 1.3rem; font-weight: 800; margin-top: 0.15rem; }
-        .detail-metric .year { font-size: 0.75rem; color: var(--faint); }
-        .detail-metric .target { font-size: 0.82rem; color: #8b5cf6; margin-top: 0.3rem; }
-        .detail-metric .context { font-size: 0.82rem; color: var(--muted); margin-top: 0.4rem; line-height: 1.5; }
-        .detail-source h4, .detail-actions h4 { font-size: 0.7rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 0.3rem; }
-        .detail-source a { color: #3b82f6; text-decoration: none; font-size: 0.85rem; }
-        .detail-actions h4 { color: var(--accent); }
-        .detail-actions ul { list-style: none; }
-        .detail-actions li { padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); line-height: 1.45; }
-        .detail-actions li::before { content: "\2192 "; color: var(--accent); font-weight: bold; }
     </style>
 </head>
 <body>
     <header>
         <div>
-            <h1>Doughnut Data Portrait</h1>
-            <p>Click any segment to view sourced data, indicators, and actions</p>
+            <h1>Doughnut Economics City Portrait</h1>
+            <p>Social foundations & ecological ceilings — click any segment</p>
         </div>
         <div class="header-btns">
             <a href="data-gaps.html" class="header-btn">Data Gaps</a>
@@ -104,80 +131,86 @@
 
     <div class="layout">
         <div class="doughnut-section">
+            <div class="city-info">
+                <h2 id="cityName"></h2>
+                <div class="pop" id="cityPop"></div>
+                <div class="desc" id="cityDesc"></div>
+            </div>
             <div id="doughnutDiv">
                 <canvas id="doughnutCanvas">Your browser does not support canvas.</canvas>
             </div>
-            <div class="hint">Click a dimension to explore its data and sources</div>
+            <div class="hint">Click a dimension to explore data, sources, and actions</div>
+            <div class="summary-strip" id="summaryStrip"></div>
+            <div class="nav-links">
+                <a href="data-gaps.html" class="nav-link">Data Gap Analysis</a>
+                <a href="outreach-template.html" class="nav-link">Outreach Directory</a>
+            </div>
         </div>
         <div class="detail-panel" id="detailPanel">
-            <p>Click a dimension to see details.</p>
+            <div class="detail-empty" id="detailEmpty">Select a dimension on the doughnut to explore data, primary sources, and ways to take action.</div>
         </div>
     </div>
 
     <script src="doughnut.js?4.6"></script>
+    <script src="example-data.js"></script>
     <script src="agent-ui.js"></script>
     <script>
-        // 1. Create the doughnut (responsive sizing)
+        // Load the first (or only) jurisdiction from the data file
+        const jurisdictionKey = Object.keys(JURISDICTIONS)[0];
+        const cityData = JURISDICTIONS[jurisdictionKey];
+
+        // Header info
+        document.getElementById('cityName').textContent = cityData.name;
+        document.getElementById('cityPop').textContent = 'Population: ' + cityData.population;
+        document.getElementById('cityDesc').textContent = cityData.description;
+
+        // Responsive doughnut sizing
         function getDoughnutSize() {
             const container = document.getElementById('doughnutDiv');
             const availW = container.clientWidth;
-            const availH = window.innerHeight - 180;
+            const availH = window.innerHeight - 210;
             return Math.max(320, Math.min(availW, availH, 800));
         }
+
         const size = getDoughnutSize();
         const textSize = Math.max(10, Math.round(14 * (size / 640)));
         const myDonut = new Doughnut(size, 1.0, textSize, "doughnutCanvas", "doughnutDiv", null, null, null, null);
         myDonut.setColours(2, 1, "#883251", "#E096C6");
 
-        // 2. Example data — replace with your city data or load from the research agent:
-        //    node tools/cli.js "Your City" "Your State" --output portrait.json
-        const exampleData = {
-            social: [
-                { name: "food", level: 50, indicator: "Food insecurity rate", value: "12% of households", year: 2023, target: "Below 10%", context: "Above national average. Food bank usage increased 30% since 2020.", source: "USDA Economic Research Service", sourceUrl: "https://www.ers.usda.gov/topics/food-nutrition-assistance/food-security-in-the-u-s/", confidence: "high", actions: ["Donate to local food banks", "Support SNAP enrollment outreach", "Advocate for school meal programs"] },
-                { name: "health", level: 0, indicator: "Uninsured rate", value: "5.2%", year: 2023, target: "Universal coverage", context: "Below national average.", source: "Census ACS", sourceUrl: "https://data.census.gov/", confidence: "high", actions: ["Support Medicaid expansion", "Help neighbors enroll in coverage"] },
-                { name: "education", level: -25, indicator: "HS graduation rate", value: "91%", year: 2023, target: "95%+", context: "Near state average.", source: "State Dept of Education", sourceUrl: "", confidence: "medium", actions: ["Volunteer as a tutor"] },
-                { name: "income & work", level: 50, indicator: "Poverty rate", value: "14%", year: 2022, target: "Below 10%", context: "Higher than national avg.", source: "Census Bureau", sourceUrl: "https://www.census.gov/quickfacts/", confidence: "high", actions: ["Support living wage campaigns"] },
-                { name: "housing", level: 100, indicator: "Cost-burdened households", value: "45%", year: 2023, target: "Below 30%", context: "Housing costs rising faster than wages.", source: "HUD", sourceUrl: "", confidence: "medium", actions: ["Advocate for affordable housing"] },
-                { name: "water & sanitation", level: -50, indicator: "Water quality", value: "100% compliant", year: 2024, target: "Full compliance", context: "Meets EPA standards.", source: "City Water Dept", sourceUrl: "", confidence: "high", actions: ["Conserve water"] },
-                { name: "energy", level: 0, indicator: "Renewable share", value: "40%", year: 2023, target: "100% by 2035", context: "On track.", source: "Energy Commission", sourceUrl: "", confidence: "medium", actions: ["Switch to green energy plan"] },
-                { name: "social equity", level: 75, indicator: "Gini coefficient", value: "0.48", year: 2022, target: "Below 0.30 (CA target)", context: "Significant income inequality.", source: "Census ACS", sourceUrl: "", confidence: "high", actions: ["Support progressive tax policies"] },
-                { name: "peace & justice", level: 25, indicator: "Violent crime rate", value: "350/100K", year: 2023, target: "Below 300/100K", context: "Slightly above national average.", source: "FBI UCR", sourceUrl: "", confidence: "medium", actions: ["Support community safety programs"] },
-                { name: "political voice", level: -50, indicator: "Voter turnout", value: "78%", year: 2024, target: "Above 75%", context: "Good civic engagement.", source: "County Elections", sourceUrl: "", confidence: "high", actions: ["Register to vote"] },
-                { name: "gender equality", level: 25, indicator: "Gender pay ratio", value: "82 cents/$1", year: 2023, target: "Pay equity (1:1)", context: "18% gap persists.", source: "BLS", sourceUrl: "", confidence: "medium", actions: ["Support pay transparency"] },
-                { name: "networks", level: 0, indicator: "Broadband access", value: "94% coverage", year: 2023, target: "Universal access", context: "Gaps in rural areas.", source: "FCC", sourceUrl: "", confidence: "medium", actions: ["Support broadband expansion"] }
-            ],
-            ecological: [
-                { name: "climate change", level: 50, indicator: "GHG per capita", value: "8.5 MT CO2e", year: 2022, target: "Below 2.5 MT by 2030", context: "Transportation is largest source.", source: "City Climate Plan", sourceUrl: "", confidence: "medium", actions: ["Reduce driving", "Electrify your home"] },
-                { name: "ocean acidification", level: 50, indicator: "Regional pH", value: "Monitored regionally", year: 2024, target: "Pre-industrial pH", context: "Global issue with local impacts.", source: "NOAA", sourceUrl: "", confidence: "low", actions: ["Reduce carbon footprint"] },
-                { name: "chemical pollution", level: 0, indicator: "Toxic releases", value: "Below threshold", year: 2023, target: "Zero toxic releases", context: "Low industrial activity.", source: "EPA TRI", sourceUrl: "", confidence: "medium", actions: ["Dispose of chemicals properly"] },
-                { name: "nitrogen & phosphorus loading", level: null, indicator: "N in groundwater", value: "Data not available", year: null, target: "Below 10 mg/L", context: "Data gap.", source: "", sourceUrl: "", confidence: "low", actions: ["Support water quality monitoring"] },
-                { name: "freshwater withdrawals", level: 25, indicator: "Water use", value: "85 gal/person/day", year: 2023, target: "Below 80 gal/day", context: "Conservation in place.", source: "Water Dept", sourceUrl: "", confidence: "medium", actions: ["Conserve water"] },
-                { name: "land conversion", level: -50, indicator: "Protected land", value: "25% of area", year: 2024, target: "30% by 2030", context: "Good parks system.", source: "Parks Dept", sourceUrl: "", confidence: "medium", actions: ["Support open space measures"] },
-                { name: "biodiversity loss", level: 0, indicator: "Habitat health", value: "Moderate", year: 2023, target: "No net loss", context: "Some restoration needed.", source: "Regional conservation plan", sourceUrl: "", confidence: "low", actions: ["Remove invasive species"] },
-                { name: "air pollution", level: -50, indicator: "PM2.5", value: "7.2 ug/m3", year: 2023, target: "WHO: 5 ug/m3", context: "Meets EPA, exceeds WHO.", source: "EPA AQS", sourceUrl: "", confidence: "high", actions: ["Reduce driving on bad air days"] },
-                { name: "ozone layer depletion", level: -100, indicator: "Stratospheric ozone", value: "Recovering", year: 2024, target: "Full recovery ~2066", context: "Montreal Protocol success.", source: "NOAA", sourceUrl: "", confidence: "high", actions: ["Properly dispose of old refrigerants"] }
-            ]
-        };
-
-        // Store data for detail panel
+        // Build dimension lookup and add to doughnut
         const dimData = {};
 
-        // 3. Add dimensions to the doughnut
-        exampleData.social.forEach(dim => {
+        cityData.social.forEach(dim => {
             myDonut.addDimension("inner", dim.name, dim.level, "");
             dimData['inner:' + dim.name] = { ...dim, ring: 'social' };
         });
-        exampleData.ecological.forEach(dim => {
+        cityData.ecological.forEach(dim => {
             myDonut.addDimension("outer", dim.name, dim.level, "");
             dimData['outer:' + dim.name] = { ...dim, ring: 'ecological' };
         });
 
-        // 4. Click handler for detail panel
+        // Summary strip
+        const all = [...cityData.social, ...cityData.ecological];
+        let good = 0, caution = 0, bad = 0, unknown = 0;
+        all.forEach(d => {
+            const l = d.level;
+            if (typeof l !== 'number' || isNaN(l)) unknown++;
+            else if (l <= 0) good++;
+            else if (l <= 50) caution++;
+            else bad++;
+        });
+        document.getElementById('summaryStrip').innerHTML =
+            `<span class="summary-chip chip-good">${good} thriving</span>` +
+            `<span class="summary-chip chip-caution">${caution} needs attention</span>` +
+            `<span class="summary-chip chip-bad">${bad} critical</span>` +
+            (unknown ? `<span class="summary-chip chip-unknown">${unknown} unknown</span>` : '');
+
+        // Detail panel
         function statusLabel(l) {
             if (l === null || l === undefined || isNaN(l)) return ['Unknown', '#9ca3af', '#f3f4f6'];
             if (l <= -50) return ['Under control', '#166534', '#dcfce7'];
-            if (l <= 0) return ['On track', '#92400e', '#fef3c7'];
-            if (l <= 50) return ['Needs attention', '#92400e', '#fef3c7'];
+            if (l <= 0) return ['On track', '#854d0e', '#fef9c3'];
+            if (l <= 50) return ['Needs attention', '#854d0e', '#fef9c3'];
             if (l <= 100) return ['Critical', '#991b1b', '#fee2e2'];
             return ['Severe', '#fff', '#ef4444'];
         }
@@ -188,6 +221,7 @@
             const panel = document.getElementById('detailPanel');
             const [label, color, bg] = statusLabel(d.level);
             const isEco = d.ring === 'ecological';
+            const cityName = cityData.name.replace(/^City of /, '');
 
             let html = `<div class="detail-header">
                 <span class="detail-ring ${isEco ? 'ring-eco' : 'ring-social'}"></span>
@@ -211,7 +245,7 @@
 
             if (d.source) {
                 html += `<div class="detail-source"><h4>Source</h4>`;
-                html += d.sourceUrl ? `<a href="${d.sourceUrl}" target="_blank">${d.source}</a>` : d.source;
+                html += d.sourceUrl ? `<a href="${d.sourceUrl}" target="_blank" rel="noopener">${d.source}</a>` : `<span style="font-size:0.82rem;color:var(--muted)">${d.source}</span>`;
                 html += `</div>`;
             }
 
@@ -222,17 +256,25 @@
             }
 
             // AI Research button
-            html += AgentUI.renderResearchButton(d.name, d.ring, 'Example City', 'State');
+            html += AgentUI.renderResearchButton(d.name, d.ring, cityName, 'California');
 
             panel.innerHTML = html;
+            document.getElementById('detailEmpty')?.remove();
         }
 
-        const canvas = document.getElementById('doughnutCanvas');
-        canvas.addEventListener('click', () => {
+        // Click handler
+        document.getElementById('doughnutCanvas').addEventListener('click', () => {
             setTimeout(() => {
                 const dim = myDonut.getSelectedDimension();
                 if (dim) showDetail(dim.type, dim.name);
             }, 50);
+        });
+
+        // Resize handler
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => location.reload(), 300);
         });
     </script>
 </body>
