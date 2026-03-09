@@ -13,7 +13,7 @@ Return JSON: { name, level (-100 to 150 or null), indicator, value, year, target
 Only use real verifiable data. Include direct source URLs. Return ONLY valid JSON.`;
 
     const PRESETS = {
-        openai:     { url: 'https://api.openai.com/v1',     model: 'gpt-4o',            label: 'OpenAI',     hint: 'Requires OpenAI API key (sk-...)', noJsonMode: false },
+        openai:     { url: 'https://api.openai.com/v1',     model: 'gpt-4.1',           label: 'OpenAI',     hint: 'Requires OpenAI API key (sk-...)', noJsonMode: false },
         openrouter: { url: 'https://openrouter.ai/api/v1',  model: 'anthropic/claude-sonnet-4-20250514', label: 'OpenRouter', hint: 'Access Claude, Llama, Mistral & more (openrouter.ai)', noJsonMode: true },
         ollama:     { url: 'http://localhost:11434/v1',      model: 'llama3',            label: 'Ollama',     hint: 'Free local models — no API key needed', noJsonMode: true },
     };
@@ -127,7 +127,7 @@ Only use real verifiable data. Include direct source URLs. Return ONLY valid JSO
         // Inputs
         const urlInput = makeInput('Endpoint URL', c.baseURL, 'https://api.openai.com/v1', inputBg, border, fg);
         const keyInput = makeInput('API Key', c.apiKey, 'sk-... (paste your key here)', inputBg, border, fg);
-        const modelInput = makeInput('Model', c.model, 'gpt-4o', inputBg, border, fg);
+        const modelInput = makeInput('Model', c.model, 'gpt-4.1', inputBg, border, fg);
 
         // Buttons
         const btnRow = document.createElement('div');

@@ -46,7 +46,7 @@ LLM_BASE_URL=https://your-provider.com/v1 LLM_API_KEY=... node cli.js "Portland"
 --population <pop>                Population string (e.g., "~65,000")
 --parallel <n>                    Max concurrent API requests (default: 3)
 --verbose                         Show progress messages
---model <model>                   LLM model to use (default: gpt-4o)
+--model <model>                   LLM model to use (default: gpt-4.1)
 --base-url <url>                  API base URL
 --api-key <key>                   API key (or set LLM_API_KEY env var)
 ```
@@ -63,7 +63,7 @@ node cli.js "Amsterdam" "Netherlands" --format datajs --output data.js
 
 The tool works with any provider that exposes an OpenAI-compatible chat completions endpoint. This includes:
 
-- **OpenAI** (GPT-4o, GPT-4, etc.)
+- **OpenAI** (GPT-4.1, etc.)
 - **Anthropic** via [litellm](https://github.com/BerriAI/litellm) or similar proxy
 - **Ollama** for fully local/offline research
 - **Together AI**, **Groq**, **Fireworks**, **OpenRouter**, and many others

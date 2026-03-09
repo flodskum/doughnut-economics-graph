@@ -38,7 +38,7 @@ class DoughnutResearchAgent {
             apiKey: options.apiKey || process.env.OPENAI_API_KEY || process.env.LLM_API_KEY,
             baseURL: options.baseURL || process.env.OPENAI_BASE_URL || process.env.LLM_BASE_URL || "https://api.openai.com/v1",
         });
-        this.model = options.model || process.env.LLM_MODEL || "gpt-4o";
+        this.model = options.model || process.env.LLM_MODEL || "gpt-4.1";
         this.verbose = options.verbose || false;
     }
 
